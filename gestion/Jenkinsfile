@@ -1,0 +1,95 @@
+// Jenkinsfile
+pipeline {
+    agent any // Se ejecuta en cualquier agente de Jenkins disponible
+
+    // Variables de entorno globales para el pipeline
+    environment {
+        // Reemplaza esto con tus valores de AWS
+        AWS_REGION        = "us-east-1" 
+        AWS_ACCOUNT_ID    = "TU_ID_DE_CUENTA_AWS"
+        ECR_REGISTRY      = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+        
+        // Nombres de tus repositorios ECR
+        ECR_REPO_APP      = "gestion/app"
+        ECR_REPO_NGINX    = "gestion/nginx"
+        
+        // Nombres de tus servicios ECS
+        ECS_CLUSTER_NAME  = "gestion-cluster"
+        ECS_SERVICE_NAME  = "gestion-service"
+        
+        // ID de las credenciales de AWS guardadas en Jenkins
+        AWS_CREDS_ID      = "aws-credentials" 
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Clona el repositorio de código
+                git branch: 'main', url: 'URL_DE_TU_REPOSITORIO_GIT' 
+            }
+        }
+
+        stage('Build Docker Images') {
+            steps {
+                script {
+                    // Construye la imagen de la aplicación Laravel
+                    sh "docker build -t ${ECR_REPO_APP}:latest -f Dockerfile ."
+                    
+                    // Construye la imagen de Nginx (asumiendo Dockerfile en ./nginx)
+                    sh "docker build -t ${ECR_REPO_NGINX}:latest -f nginx/Dockerfile ./nginx"
+                }
+            }
+        }
+        
+        stage('Login to ECR') {
+            steps {
+                script {
+                    // Usa el plugin Amazon ECR para obtener credenciales de Docker
+                    // Esto configura Docker para poder hacer 'push'
+                    withCredentials([aws(credentialsId: AWS_CREDS_ID, region: AWS_REGION)]) {
+                        sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}"
+                    }
+                }
+            }
+        }
+
+        stage('Tag and Push Images') {
+            steps {
+                script {
+                    // Taggear las imágenes construidas con la URL completa de ECR
+                    sh "docker tag ${ECR_REPO_APP}:latest ${ECR_REGISTRY}/${ECR_REPO_APP}:latest"
+                    sh "docker tag ${ECR_REPO_NGINX}:latest ${ECR_REGISTRY}/${ECR_REPO_NGINX}:latest"
+                    
+                    // Subir (push) las imágenes a ECR
+                    sh "docker push ${ECR_REGISTRY}/${ECR_REPO_APP}:latest"
+                    sh "docker push ${ECR_REGISTRY}/${ECR_REPO_NGINX}:latest"
+                }
+            }
+        }
+        
+        stage('Deploy to ECS') {
+            steps {
+                // Envuelve este paso con las credenciales de AWS
+                withCredentials([aws(credentialsId: AWS_CREDS_ID, region: AWS_REGION)]) {
+                    // Usa AWS CLI (instalado en el agente Jenkins o contenedor)
+                    // para forzar un nuevo despliegue del servicio ECS.
+                    // Esto hace que ECS descargue las imágenes con la tag 'latest'
+                    sh "aws ecs update-service --cluster ${ECS_CLUSTER_NAME} --service ${ECS_SERVICE_NAME} --force-new-deployment --region ${AWS_REGION}"
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            // Limpia las imágenes de Docker locales para ahorrar espacio
+            sh "docker rmi -f ${ECR_REGISTRY}/${ECR_REPO_APP}:latest || true"
+            sh "docker rmi -f ${ECR_REGISTRY}/${ECR_REPO_NGINX}:latest || true"
+            sh "docker rmi -f ${ECR_REPO_APP}:latest || true"
+            sh "docker rmi -f ${ECR_REPO_NGINX}:latest || true"
+            
+            // Cierra sesión de Docker ECR
+            sh "docker logout ${ECR_REGISTRY}"
+        }
+    }
+}
