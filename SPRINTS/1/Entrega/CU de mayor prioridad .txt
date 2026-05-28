@@ -1,0 +1,48 @@
+
+Casos de Uso - GestiON ISAM (Alta Prioridad)
+
+1. Autenticación
+
+CU-01: Iniciar sesión (Prioridad 1)Básicamente, cualquier usuario (ya sea Profesor, Estudiante o Admin) necesita estar registrado para entrar al sistema. El proceso es el de siempre: van a la pantalla de login, ponen su usuario y contraseña , y el sistema valida esos credenciales para redirigirlos al panel que les corresponde según su rol.
+Si se equivocan en los datos, el sistema les muestra un error y los deja volver a intentar, y si se olvidaron la clave, tienen la opción de recuperarla (esto nos lleva al CU-02). Al finalizar, el usuario queda con la sesión iniciada y listo para acceder a sus funciones.
+
+
+CU-02: Recuperar contraseña (Prioridad 2) Esto es para cuando un usuario (Profesor, Estudiante o Admin) ya existe pero no se acuerda su clave para ingresar. Tocan en "Recuperar contraseña" y ponen el mail con el que se registraron. El sistema les manda un enlace de restablecimiento para que definan una contraseña nueva. Si llegan a ingresar un correo que no está registrado, el sistema arroja un mensaje de error. Una vez actualizada, ya pueden loguearse normalmente.
+
+
+
+
+ 2. Gestión de Préstamos
+
+CU-03: Solicitar préstamo (Prioridad 1)Este es el núcleo de negocio del sistema. Los Estudiantes o Profesores que ya iniciaron sesión pueden pedir un ítem, siempre y cuando figure con stock disponible. Primero consultan qué hay en el inventario (CU-05) , eligen el ítem y la fecha de devolución, y el sistema registra la solicitud. Luego se notifica al administrador para su aprobación.
+Si se quedan sin stock, el sistema informa la disponibilidad ahí mismo. Si el admin deniega el pedido, se le avisa al solicitante. Una vez aprobado el préstamo, se registra formalmente y se descuenta el stock. Esto se relaciona más adelante con el registro de devoluciones.
+
+
+CU-04: Registrar devolución (Prioridad 1) Con esto se marca el cierre del ciclo de los préstamos. El Admin se encarga de buscar el préstamo que está activo en el sistema y confirma la recepción del ítem. Ahí el sistema registra la devolución, actualiza el stock y cierra ese préstamo en el historial.
+Un detalle importante: si devuelven el ítem fuera de la fecha acordada, el sistema marca que hay mora, lo que engancha con el control de fechas de devolución. Al terminar, el ítem vuelve a estar disponible y el historial queda al día.
+
+
+
+3. Inventario y Usuarios
+
+CU-05: Gestionar inventario (Prioridad 1) Es un prerrequisito directo para poder hacer los préstamos. El Admin entra al módulo de inventario, desde donde puede agregar ítems nuevos, editarlos o eliminarlos. También aprovecha para definir cuál es el stock mínimo y máximo. Al guardar, los cambios se reflejan en la vista de stock en tiempo real.
+Si el admin deja algún dato incompleto, el sistema pide la corrección antes de dejarlo guardar.
+
+
+CU-06: Gestionar usuarios (Prioridad 2) Esta función es necesaria para que el Admin pueda crear y mantener las cuentas del sistema. Accediendo al módulo de usuarios, puede registrarlos, editarlos, eliminarlos o restablecer sus contraseñas. Ahí mismo les asigna el rol correspondiente (Profesor, Estudiante o Admin) y el sistema aplica los cambios.
+Hay que tener cuidado con una cosa: si intentan eliminar a un usuario que todavía tiene préstamos activos, el sistema tira una advertencia antes de proceder.
+
+
+
+
+4. Criterios de Priorización 
+
+Para organizar el desarrollo, dividimos las tareas en dos niveles:
+
+Prioridad 1 (Los bloqueantes): Iniciar sesión porque sin eso nadie accede; Solicitar préstamo porque es el corazón del sistema; Registrar devolución para cerrar el ciclo de uso ; y Gestionar inventario porque sin ítems cargados no se puede prestar nada.
+
+
+Prioridad 2 (Los habilitadores tempranos): Recuperar contraseña salva a la gente de quedar bloqueada operativamente desde el día uno , y Gestionar usuarios permite al Admin armar la base de personas.
+
+
+Las demás funcionalidades del diagrama (como ver el calendario, denegar solicitudes, consultar el historial o controlar las fechas) van a depender sí o sí de que estas primeras partes estén implementadas primero.
