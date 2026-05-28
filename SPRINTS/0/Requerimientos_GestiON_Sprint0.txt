@@ -1,0 +1,177 @@
+================================================================
+        LISTADO DE REQUERIMIENTOS — Sistema GestiON
+         Instituto Adventista de Misiones (ISAM)
+                       Sprint 0
+================================================================
+Proyecto  : GestiON — Sistema web de gestión institucional
+Cliente   : Instituto Adventista de Misiones (ISAM), Misiones, AR
+Equipo    : Usandivares Francisco Maximiliano (Líder)
+            Castro Valdivia Josías Marco (Alumno)
+Stack     : Laravel (PHP) · Blade · MySQL · Docker
+================================================================
+
+
+----------------------------------------------------------------
+1. REQUERIMIENTOS FUNCIONALES
+----------------------------------------------------------------
+
+--- MÓDULO DE AUTENTICACIÓN Y USUARIOS ---
+
+RF-01  El sistema debe permitir a los usuarios iniciar sesión
+       mediante usuario y contraseña.
+
+RF-02  El sistema debe soportar tres roles diferenciados:
+       Administrador, Docente y Estudiante, restringiendo el
+       acceso a las funciones según el rol asignado.
+
+RF-03  El sistema debe permitir recuperar la contraseña mediante
+       un enlace de restablecimiento enviado al correo registrado.
+
+RF-04  El sistema debe permitir al Administrador registrar nuevos
+       usuarios, asignarles un rol, editarlos y eliminarlos.
+
+RF-05  El sistema debe permitir al Administrador restablecer la
+       contraseña de cualquier usuario.
+
+RF-06  El sistema debe permitir cerrar sesión de forma segura
+       desde cualquier pantalla.
+
+--- MÓDULO DE GESTIÓN DE EVENTOS ---
+
+RF-07  El sistema debe permitir crear eventos asociados a uno de
+       los tres espacios disponibles: Salón de Actos, SUM o
+       Pabellón de Música.
+
+RF-08  El sistema debe permitir modificar y eliminar eventos
+       existentes, con control de acceso según el rol.
+
+RF-09  El sistema debe mostrar un calendario interactivo que
+       organice y visualice los eventos por espacio físico.
+
+RF-10  El sistema debe detectar y advertir sobre conflictos de
+       horario al crear o modificar un evento en un espacio ya
+       reservado.
+
+--- MÓDULO DE INVENTARIO ---
+
+RF-11  El sistema debe permitir al Administrador agregar, editar
+       y eliminar implementos del inventario del SUM y del
+       Pabellón de Música.
+
+RF-12  El sistema debe mantener y mostrar el stock disponible de
+       cada implemento en tiempo real.
+
+RF-13  El sistema debe actualizar el stock automáticamente al
+       aprobar un préstamo o registrar una devolución.
+
+--- MÓDULO DE PRÉSTAMOS Y DEVOLUCIONES ---
+
+RF-14  El sistema debe permitir a Docentes y Estudiantes
+       solicitar el préstamo de implementos, seleccionando el
+       ítem y la fecha estimada de devolución.
+
+RF-15  El sistema debe notificar al Administrador cuando se
+       registre una nueva solicitud de préstamo.
+
+RF-16  El sistema debe permitir al Administrador aprobar o
+       denegar solicitudes de préstamo.
+
+RF-17  El sistema debe permitir al Administrador registrar la
+       devolución de un implemento prestado.
+
+RF-18  El sistema debe controlar las fechas de devolución y
+       marcar como vencidos los préstamos que superen la fecha
+       pactada.
+
+--- MÓDULO DE HISTORIAL Y REPORTES ---
+
+RF-19  El sistema debe mantener un historial de eventos y
+       préstamos consultable por fecha, usuario o implemento.
+
+RF-20  El historial debe conservar registros de hasta seis meses
+       (un semestre), siendo ese el período máximo de consulta.
+
+
+----------------------------------------------------------------
+2. REQUERIMIENTOS NO FUNCIONALES
+----------------------------------------------------------------
+
+--- USABILIDAD ---
+
+RNF-01  La interfaz debe ser web responsive, accesible desde
+        navegadores de escritorio y dispositivos móviles sin
+        necesidad de instalación adicional.
+
+RNF-02  El sistema debe presentar mensajes de error claros y
+        comprensibles para el usuario ante acciones inválidas
+        o fallidas.
+
+RNF-03  La navegación entre módulos debe realizarse en no más
+        de tres clics desde cualquier pantalla principal.
+
+--- RENDIMIENTO ---
+
+RNF-04  Las páginas principales (calendario, inventario,
+        listado de préstamos) deben cargar en menos de
+        3 segundos bajo condiciones normales de uso.
+
+RNF-05  El sistema debe soportar el uso simultáneo de al menos
+        30 usuarios sin degradación perceptible del servicio,
+        acorde al tamaño de la institución.
+
+--- SEGURIDAD ---
+
+RNF-06  El sistema debe autenticar a todos los usuarios antes
+        de permitir el acceso a cualquier módulo funcional.
+
+RNF-07  El control de acceso debe aplicarse por rol en cada
+        ruta y operación, tanto en frontend como en backend.
+
+RNF-08  Las contraseñas deben almacenarse con hash seguro
+        (bcrypt o equivalente); nunca en texto plano.
+
+RNF-09  El sistema debe protegerse contra vulnerabilidades
+        web comunes: SQL Injection, XSS y CSRF.
+
+--- MANTENIBILIDAD ---
+
+RNF-10  El código debe seguir las convenciones del framework
+        Laravel (MVC, Eloquent, políticas de acceso).
+
+RNF-11  El sistema debe desarrollarse en un entorno
+        contenerizado con Docker, garantizando reproducibilidad
+        en desarrollo y despliegue.
+
+RNF-12  La base de datos MySQL debe incluir migraciones
+        versionadas gestionadas por Laravel.
+
+--- DISPONIBILIDAD ---
+
+RNF-13  El sistema debe estar disponible durante el horario
+        académico del ISAM (lunes a sábado, 7:00–22:00 hs).
+
+RNF-14  El entorno de hosting en la nube (AWS o Azure, por
+        definir) debe garantizar una disponibilidad mínima
+        del 99 % en el período lectivo.
+
+--- RESTRICCIONES Y EXCLUSIONES ---
+
+RNF-15  El sistema NO incluirá funcionalidades de pago en
+        línea ni gestión financiera de ningún tipo.
+
+RNF-16  El sistema NO enviará notificaciones por correo
+        electrónico ni SMS de forma automática.
+
+RNF-17  El sistema NO se integrará con otros sistemas externos
+        del ISAM en esta etapa del proyecto.
+
+
+================================================================
+RESUMEN
+================================================================
+
+  Requerimientos funcionales    : 20  (RF-01 a RF-20)
+  Requerimientos no funcionales : 17  (RNF-01 a RNF-17)
+  Total                         : 37
+
+================================================================

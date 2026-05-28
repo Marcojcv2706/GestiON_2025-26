@@ -1,0 +1,150 @@
+================================================================
+       DESCRIPCIONES DE CASOS DE USO — GestiON ISAM
+              Casos de uso de mayor prioridad
+================================================================
+
+----------------------------------------------------------------
+AUTENTICACIÓN
+----------------------------------------------------------------
+
+CU-01 — Iniciar sesión                              [PRIORIDAD 1]
+----------------------------------------------------------------
+Actores        : Profesor, Estudiante, Admin
+Precondición   : El usuario está registrado en el sistema.
+
+Flujo principal:
+  1. El usuario accede a la pantalla de login.
+  2. Ingresa usuario y contraseña.
+  3. El sistema valida credenciales.
+  4. El sistema redirige al panel según el rol.
+
+Flujos alternativos:
+  A1: Credenciales incorrectas → muestra error, permite reintentar.
+  A2: Usuario activa "Recuperar contraseña" → extiende a CU-02.
+
+Postcondición  : Sesión iniciada; el usuario accede a las funciones de su rol.
+Relaciones     : «extend» Recuperar contraseña · «extend» Registrarse
+
+
+CU-02 — Recuperar contraseña                        [PRIORIDAD 2]
+----------------------------------------------------------------
+Actores        : Profesor, Estudiante, Admin
+Precondición   : El usuario existe en el sistema y no puede ingresar.
+
+Flujo principal:
+  1. El usuario selecciona "Recuperar contraseña".
+  2. Ingresa su correo registrado.
+  3. El sistema envía un enlace de restablecimiento.
+  4. El usuario define una nueva contraseña.
+
+Flujos alternativos:
+  A1: Correo no registrado → muestra mensaje de error.
+
+Postcondición  : Contraseña actualizada; el usuario puede iniciar sesión.
+Relaciones     : «extend» de Iniciar sesión
+
+
+----------------------------------------------------------------
+GESTIÓN DE PRÉSTAMOS
+----------------------------------------------------------------
+
+CU-03 — Solicitar préstamo                          [PRIORIDAD 1]
+----------------------------------------------------------------
+Actores        : Estudiante, Profesor
+Precondición   : El usuario inició sesión; el ítem figura con stock disponible.
+
+Flujo principal:
+  1. El usuario consulta el stock disponible (CU-05).
+  2. Selecciona el ítem y fecha de devolución.
+  3. El sistema registra la solicitud de préstamo.
+  4. Se notifica al administrador para su aprobación.
+
+Flujos alternativos:
+  A1: Sin stock → el sistema informa disponibilidad.
+  A2: El admin deniega la solicitud → se notifica al solicitante.
+
+Postcondición  : Préstamo registrado; stock decrementado al aprobarse.
+Relaciones     : «include» Ver stock disponible · «extend» Registrar devolución
+
+
+CU-04 — Registrar devolución                        [PRIORIDAD 1]
+----------------------------------------------------------------
+Actores        : Admin
+Precondición   : Existe un préstamo activo registrado en el sistema.
+
+Flujo principal:
+  1. El admin busca el préstamo activo.
+  2. Confirma la recepción del ítem.
+  3. El sistema registra la devolución y actualiza el stock.
+  4. Se cierra el préstamo en el historial.
+
+Flujos alternativos:
+  A1: Devolución fuera de fecha → el sistema registra mora
+      (extiende a CU-06 Controlar fechas de devolución).
+
+Postcondición  : Ítem disponible nuevamente; historial actualizado.
+Relaciones     : «extend» de Solicitar préstamo
+                 «extend» Controlar fechas de devolución
+
+
+CU-05 — Gestionar inventario                        [PRIORIDAD 1]
+----------------------------------------------------------------
+Actores        : Admin
+Precondición   : El admin inició sesión.
+
+Flujo principal:
+  1. El admin accede al módulo de inventario.
+  2. Puede agregar, editar o eliminar ítems.
+  3. Define stock mínimo y máximo.
+  4. El sistema guarda los cambios y actualiza la vista de stock.
+
+Flujos alternativos:
+  A1: Datos incompletos → el sistema solicita corrección antes de guardar.
+
+Postcondición  : Inventario actualizado; los cambios se reflejan en tiempo real.
+Relaciones     : «include» Ver stock disponible
+
+
+----------------------------------------------------------------
+GESTIÓN DE USUARIOS
+----------------------------------------------------------------
+
+CU-06 — Gestionar usuarios                          [PRIORIDAD 2]
+----------------------------------------------------------------
+Actores        : Admin
+Precondición   : El admin inició sesión.
+
+Flujo principal:
+  1. El admin accede al módulo de usuarios.
+  2. Puede registrar, editar, eliminar usuarios o restablecer contraseñas.
+  3. Asigna el rol correspondiente (Profesor, Estudiante, Admin).
+  4. El sistema guarda y aplica los cambios.
+
+Flujos alternativos:
+  A1: Usuario con préstamos activos → el sistema advierte antes de eliminar.
+
+Postcondición  : Usuario creado/modificado/eliminado con el rol correcto.
+Relaciones     : «include» Registrar usuario · Editar usuario
+                 «include» Eliminar usuario · Asignar rol
+                 «include» Restablecer contraseña
+
+
+================================================================
+CRITERIO DE PRIORIZACIÓN
+================================================================
+
+Prioridad 1 (bloqueantes):
+  - CU-01 Iniciar sesión: habilita el acceso de todos los actores.
+  - CU-03 Solicitar préstamo: núcleo de negocio del sistema.
+  - CU-04 Registrar devolución: cierre del ciclo de préstamo.
+  - CU-05 Gestionar inventario: prerequisito directo de los préstamos.
+
+Prioridad 2 (habilitadores tempranos):
+  - CU-02 Recuperar contraseña: evita bloqueos operativos desde el día uno.
+  - CU-06 Gestionar usuarios: necesario para que Admin cree y mantenga cuentas.
+
+Los demás CU del diagrama (Ver calendario, Denegar solicitud,
+Consultar historial, Controlar fechas) dependen de que los
+anteriores estén implementados primero.
+
+================================================================
