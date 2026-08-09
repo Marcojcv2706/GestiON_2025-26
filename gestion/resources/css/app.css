@@ -1,3 +1,334 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/* =========================================================
+   COLORES INSTITUCIONALES
+   ========================================================= */
+
+:root {
+    --institucional-azul: #003366;
+    --institucional-amarillo: #EDC001;
+    --institucional-blanco: #FFFFFF;
+}
+
+
+/* =========================================================
+   TRANSICIONES GENERALES
+   ========================================================= */
+
+* {
+    transition-property:
+        color,
+        background-color,
+        border-color,
+        opacity,
+        box-shadow,
+        transform;
+
+    transition-duration: 200ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+/* =========================================================
+   BOTONES
+   ========================================================= */
+
+button,
+.btn {
+    transition:
+        transform 180ms cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow 180ms cubic-bezier(0.4, 0, 0.2, 1),
+        background-color 180ms ease,
+        border-color 180ms ease,
+        color 180ms ease;
+}
+
+button:hover,
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+}
+
+button:active,
+.btn:active {
+    transform: translateY(0) scale(0.97);
+}
+
+
+/* =========================================================
+   BOTÓN PRIMARIO — AZUL INSTITUCIONAL
+   ========================================================= */
+
+.btn-primary {
+    background-color: var(--institucional-azul) !important;
+    border-color: var(--institucional-azul) !important;
+    color: var(--institucional-blanco) !important;
+}
+
+.btn-primary:hover {
+    background-color: #00264d !important;
+    border-color: #00264d !important;
+    color: var(--institucional-blanco) !important;
+}
+
+
+/* =========================================================
+   BOTÓN WARNING — AMARILLO INSTITUCIONAL
+   ========================================================= */
+
+.btn-warning {
+    background-color: var(--institucional-amarillo) !important;
+    border-color: var(--institucional-amarillo) !important;
+    color: #000000 !important;
+}
+
+.btn-warning:hover {
+    background-color: #d4ac00 !important;
+    border-color: #d4ac00 !important;
+}
+
+
+/* =========================================================
+   BOTÓN DANGER
+   ========================================================= */
+
+.btn-danger {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    color: var(--institucional-blanco) !important;
+}
+
+
+/* =========================================================
+   BOTÓN SECUNDARIO
+   ========================================================= */
+
+.btn-secondary {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+    color: var(--institucional-blanco) !important;
+}
+
+
+/* =========================================================
+   TARJETAS
+   ========================================================= */
+
+.card {
+    border: none;
+    border-radius: 12px;
+    transition:
+        transform 250ms ease,
+        box-shadow 250ms ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 51, 102, 0.12);
+}
+
+
+/* =========================================================
+   TÍTULOS
+   ========================================================= */
+
+h1,
+h2,
+h3 {
+    color: var(--institucional-azul);
+}
+
+
+/* =========================================================
+   ENLACES
+   ========================================================= */
+
+a {
+    color: var(--institucional-azul);
+}
+
+a:hover {
+    color: var(--institucional-amarillo);
+}
+
+
+/* =========================================================
+   INPUTS Y SELECTS
+   ========================================================= */
+
+input,
+textarea,
+select {
+    transition:
+        border-color 200ms ease,
+        box-shadow 200ms ease,
+        transform 200ms ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    border-color: var(--institucional-azul) !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.15) !important;
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   TABLAS
+   ========================================================= */
+
+.table thead {
+    background-color: var(--institucional-azul);
+    color: var(--institucional-blanco);
+}
+
+.table thead th {
+    color: var(--institucional-blanco);
+}
+
+
+/* =========================================================
+   ALERTAS
+   ========================================================= */
+
+.alert {
+    border-radius: 10px;
+}
+
+
+/* =========================================================
+   ANIMACIÓN DE APARICIÓN
+   ========================================================= */
+
+@keyframes aparecer {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.container-fluid,
+.card {
+    animation: aparecer 400ms ease-out;
+}
+
+/* =========================================================
+COLORES DEL DASHBOARD
+========================================================= */
+
+.dashboard-card {
+background-color: #003366 !important;
+color: #FFFFFF !important;
+border: none !important;
+border-left: 5px solid #EDC001 !important;
+}
+
+.dashboard-card .card-title,
+.dashboard-card .card-text {
+color: #FFFFFF !important;
+}
+
+.dashboard-card-yellow {
+background-color: #EDC001 !important;
+color: #003366 !important;
+border-left: 5px solid #003366 !important;
+}
+
+.dashboard-card-yellow .card-title,
+.dashboard-card-yellow .card-text {
+color: #003366 !important;
+}
+
+.dashboard-turnos .card-header {
+background-color: #003366 !important;
+color: #FFFFFF !important;
+border-bottom: 3px solid #EDC001 !important;
+}
+
+.badge-institucional {
+background-color: #EDC001 !important;
+color: #003366 !important;
+}
+
+.turno-item:hover {
+background-color: rgba(0, 51, 102, 0.05);
+transform: translateX(4px);
+}
+
+/* =========================================================
+   MENÚ LATERAL INSTITUCIONAL
+   ========================================================= */
+
+.menu-institucional {
+    background-color: #003366 !important;
+    color: #FFFFFF !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.menu-institucional:hover {
+    background-color: #EDC001 !important;
+    color: #003366 !important;
+    transform: translateX(4px);
+}
+
+
+/* =========================================================
+   CERRAR SESIÓN
+   ========================================================= */
+
+.menu-logout {
+    background-color: #003366 !important;
+    color: #EDC001 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.menu-logout:hover {
+    background-color: #EDC001 !important;
+    color: #003366 !important;
+    transform: translateX(4px);
+}
+
+
+/* =========================================================
+   BARRA SUPERIOR
+   ========================================================= */
+
+.navbar-institucional {
+    background-color: #FFFFFF !important;
+    border-bottom: 3px solid #EDC001 !important;
+}
+
+.navbar-institucional .nav-link {
+    color: #003366 !important;
+    font-weight: 600;
+}
+
+.navbar-institucional .nav-link:hover {
+    color: #EDC001 !important;
+}
+
+
+/* =========================================================
+   MENÚ DESPLEGABLE
+   ========================================================= */
+
+.navbar-institucional .dropdown-menu {
+    border: none;
+    border-top: 3px solid #EDC001;
+    box-shadow: 0 8px 20px rgba(0, 51, 102, 0.15);
+}
+
+.navbar-institucional .dropdown-item {
+    color: #003366;
+}
+
+.navbar-institucional .dropdown-item:hover {
+    background-color: #003366;
+    color: #FFFFFF;
+}
