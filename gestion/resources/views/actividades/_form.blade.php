@@ -1,6 +1,8 @@
 @if ($errors->any())
-    <div class="alert alert-danger">
-        <ul>
+    <div class="alert alert-danger shadow-sm border-0">
+        <strong>Se encontraron algunos errores:</strong>
+
+        <ul class="mb-0 mt-2">
             @foreach ($errors->all() as $error)
                 <li>{{ $error }}</li>
             @endforeach
@@ -8,29 +10,98 @@
     </div>
 @endif
 
-<div class="mb-3">
-    <label for="name" class="form-label">Nombre de la Actividad</label>
-    <input type="text" class="form-control" id="name" name="name" value="{{ old('name', $actividad->name ?? '') }}" required>
+
+{{-- NOMBRE --}}
+<div class="mb-4">
+
+    <label for="name" class="form-label fw-semibold">
+        Nombre de la Actividad
+    </label>
+
+    <input
+        type="text"
+        class="form-control transition-all duration-200"
+        id="name"
+        name="name"
+        value="{{ old('name', $actividad->name ?? '') }}"
+        placeholder="Ingrese el nombre de la actividad"
+        required
+    >
+
 </div>
 
-<div class="mb-3">
-    <label for="sub_espacio_id" class="form-label">Sub-espacio</label>
-    <select class="form-select" id="sub_espacio_id" name="sub_espacio_id" required>
-        <option value="">Seleccione un sub-espacio...</option>
+
+{{-- SUB-ESPACIO --}}
+<div class="mb-4">
+
+    <label for="sub_espacio_id" class="form-label fw-semibold">
+        Sub-espacio
+    </label>
+
+    <select
+        class="form-select transition-all duration-200"
+        id="sub_espacio_id"
+        name="sub_espacio_id"
+        required
+    >
+
+        <option value="">
+            Seleccione un sub-espacio...
+        </option>
+
         @foreach($subEspacios as $subEspacio)
-            <option value="{{ $subEspacio->id }}" @selected(old('sub_espacio_id', $actividad->sub_espacio_id ?? '') == $subEspacio->id)>
+
+            <option
+                value="{{ $subEspacio->id }}"
+                @selected(old('sub_espacio_id', $actividad->sub_espacio_id ?? '') == $subEspacio->id)
+            >
                 {{ $subEspacio->name }}
             </option>
+
         @endforeach
+
     </select>
+
 </div>
 
-<div class="mb-3">
-    <label for="description" class="form-label">Descripción (Opcional)</label>
-    <textarea class="form-control" id="description" name="description" rows="3">{{ old('description', $actividad->description ?? '') }}</textarea>
+
+{{-- DESCRIPCIÓN --}}
+<div class="mb-4">
+
+    <label for="description" class="form-label fw-semibold">
+        Descripción
+        <span class="text-muted fw-normal">(Opcional)</span>
+    </label>
+
+    <textarea
+        class="form-control transition-all duration-200"
+        id="description"
+        name="description"
+        rows="4"
+        placeholder="Ingrese una descripción de la actividad..."
+    >{{ old('description', $actividad->description ?? '') }}</textarea>
+
 </div>
 
-<a href="{{ route('actividades.index') }}" class="btn btn-secondary">Cancelar</a>
-<button type="submit" class="btn btn-primary">
-    {{ isset($actividad) ? 'Actualizar Actividad' : 'Crear Actividad' }}
-</button>
+
+{{-- BOTONES --}}
+<div class="d-flex gap-2 mt-4">
+
+    {{-- CANCELAR --}}
+    <a
+        href="{{ route('actividades.index') }}"
+        class="btn btn-secondary transition-all duration-200 ease-out hover:scale-105 hover:shadow active:scale-95"
+    >
+        Cancelar
+    </a>
+
+
+    {{-- GUARDAR --}}
+    <button
+        type="submit"
+        class="btn btn-primary transition-all duration-200 ease-out hover:scale-105 hover:shadow-lg active:scale-95"
+    >
+        {{ isset($actividad) ? 'Actualizar Actividad' : 'Crear Actividad' }}
+    </button>
+
+</div>
