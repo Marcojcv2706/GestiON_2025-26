@@ -6,17 +6,15 @@
 
 <div class="container-fluid">
 
-    <h1 class="mb-4">
-        Actividades
-    </h1>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mt-4">Actividades</h1>
 
-    {{-- ESTE BOTÓN SOLO APARECE SI EL USUARIO TIENE PERMISO --}}
     @can('es-admin')
-        <a href="{{ route('actividades.create') }}"
-           class="btn btn-primary transition-all duration-200 ease-out hover:scale-105 hover:shadow-lg active:scale-95">
+        <a href="{{ route('actividades.create') }}" class="btn btn-primary">
             Crear Actividad
         </a>
     @endcan
+</div>
 
     <div class="card mt-4">
         <div class="card-body">

@@ -13,7 +13,7 @@
     <div class="card shadow-sm border-0">
         <div class="card-body p-4">
 
-            <form action="{{ route('actividades.update', $actividad) }}" method="POST">
+            <form action="{{ route('actividades.update', ['actividad' => $actividad->id]) }}" method="POST">
                 @csrf
                 @method('PUT')
 

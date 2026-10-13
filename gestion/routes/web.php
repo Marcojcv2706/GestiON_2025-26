@@ -19,7 +19,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('turnos', TurnoController::class);
-    Route::resource('actividades', ActividadController::class);
+    Route::resource('actividades', ActividadController::class)
+    ->parameters(['actividades' => 'actividad']);
 
 
     // --- RUTAS SOLO PARA ADMINISTRADORES ---
