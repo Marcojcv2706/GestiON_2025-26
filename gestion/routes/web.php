@@ -1,5 +1,5 @@
 <?php
-
+use App\Http\Controllers\HistorialController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TurnoController;
 use App\Http\Controllers\ActividadController;
@@ -8,6 +8,7 @@ use App\Http\Controllers\RecursoController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SubEspacioController;
+use App\Http\Controllers\Api\CalendarioController;
 
 // --- RUTAS PÚBLICAS ---
 Route::get('/', function () {
@@ -19,8 +20,20 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('turnos', TurnoController::class);
+    
     Route::resource('actividades', ActividadController::class)
     ->parameters(['actividades' => 'actividad']);
+    
+    Route::get('/historial', [HistorialController::class, 'index'])
+    ->middleware('auth')
+    ->name('historial.index');
+    
+    Route::get('/calendario', [CalendarioController::class, 'index'])
+    ->name('api.calendario.index');
+
+    Route::get('/calendario', function () {
+    return view('calendario.index');
+    })->middleware('auth')->name('calendario.index');
 
 
     // --- RUTAS SOLO PARA ADMINISTRADORES ---
@@ -39,3 +52,4 @@ Route::middleware(['auth'])->group(function () {
 
 
 require __DIR__.'/auth.php';
+
