@@ -2,21 +2,28 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
+use App\Models\Espacio;
 use App\Models\SubEspacio;
+use Illuminate\Database\Seeder;
 
 class SubEspacioSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
-        // Subespacios del SUM (espacio_id = 1)
-        SubEspacio::create(['espacio_id' => 1, 'name' => 'Cancha Voley 1']);
-        SubEspacio::create(['espacio_id' => 1, 'name' => 'Cancha Voley 2']);
-        SubEspacio::create(['espacio_id' => 1, 'name' => 'Cancha Futbol 5']);
-        SubEspacio::create(['espacio_id' => 1, 'name' => 'Cancha Basquet']);
+        $subEspacios = [
+            'SUM' => ['Cancha Voley 1', 'Cancha Voley 2', 'Cancha Futbol 5', 'Cancha Basquet'],
+            'Canchas Exteriores' => ['Cancha Futbol 11', 'Cancha Tenis'],
+        ];
 
-        // Subespacios de Canchas Exteriores (espacio_id = 2)
-        SubEspacio::create(['espacio_id' => 2, 'name' => 'Cancha Futbol 11']);
-        SubEspacio::create(['espacio_id' => 2, 'name' => 'Cancha Tenis']);
+        foreach ($subEspacios as $espacioNombre => $nombres) {
+            $espacio = Espacio::where('name', $espacioNombre)->firstOrFail();
+
+            foreach ($nombres as $name) {
+                SubEspacio::firstOrCreate([
+                    'espacio_id' => $espacio->id,
+                    'name' => $name,
+                ]);
+            }
+        }
     }
 }

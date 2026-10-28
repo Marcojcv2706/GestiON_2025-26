@@ -3,14 +3,14 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Turno;
+use App\Models\Evento;
 use Carbon\Carbon;
 
 class TurnoSeeder extends Seeder
 {
     public function run(): void
     {
-        Turno::create([
+        Evento::create([
             'description'    => 'Reserva para entrenamiento de Voley',
             'start_time'     => Carbon::now()->addDays(2)->setHour(18),
             'end_time'       => Carbon::now()->addDays(2)->setHour(19),

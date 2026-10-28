@@ -1,14 +1,19 @@
 @extends('layouts.app')
-@section('title', 'Crear Recurso')
+
+@section('title', 'Crear recurso — GestiON')
 
 @section('content')
-    <h1 class="mt-4">Crear Nuevo Recurso</h1>
-    <div class="card">
-        <div class="card-body">
-            <form action="{{ route('admin.recursos.store') }}" method="POST">
-                @csrf
-                @include('admin.recursos._form')
-            </form>
-        </div>
+<div class="editorial-page">
+    <header class="editorial-page-heading">
+        <p class="eyebrow"><span class="eyebrow-line"></span> INVENTARIO</p>
+        <h1>Crear recurso</h1>
+    </header>
+
+    <div class="form-editorial-panel">
+        <form action="{{ route('admin.recursos.store') }}" method="POST">
+            @csrf
+            @include('admin.recursos._form')
+        </form>
     </div>
+</div>
 @endsection

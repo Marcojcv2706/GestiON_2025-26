@@ -3,7 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Turno;
+use App\Models\Evento;
+use App\Models\Historial;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -14,44 +15,81 @@ class CalendarioController extends Controller
         $inicio = $request->query('start');
         $fin = $request->query('end');
 
-        $turnos = Turno::with([
-            'actividad.subEspacio.espacio',
-            'recurso',
+        $eventos = Evento::with([
             'espacio',
+            'subEspacio.espacio',
+            'subEspacios',
+            'recursos',
+            'user',
         ])
-            ->when($inicio, fn ($query) =>
-                $query->where('end_time', '>', $inicio)
-            )
-            ->when($fin, fn ($query) =>
-                $query->where('start_time', '<', $fin)
-            )
-            ->whereNull('deleted_at')
+            ->when($inicio, function ($query) use ($inicio) {
+                $query->where('end_time', '>', $inicio);
+            })
+            ->when($fin, function ($query) use ($fin) {
+                $query->where('start_time', '<', $fin);
+            })
+            ->where('estado', 'programado')
             ->get();
 
-        $eventos = $turnos->map(function ($turno) {
-            $actividad = $turno->actividad;
-
-            $espacio = $turno->espacio?->name
-                ?? $actividad?->subEspacio?->espacio?->name;
+        $eventosMapeados = $eventos->map(function ($evento) {
+            $subspaceNames = $evento->subEspacios->pluck('name');
+            if ($subspaceNames->isEmpty() && $evento->subEspacio) {
+                $subspaceNames = collect([$evento->subEspacio->name]);
+            }
+            $espacio = $evento->espacio?->name
+                ?? $evento->subEspacio?->espacio?->name
+                ?? 'No especificado';
+            if ($subspaceNames->isNotEmpty()) {
+                $espacio .= ' · '.$subspaceNames->implode(' + ');
+            }
 
             return [
-                'id' => 'turno-' . $turno->id,
-                'title' => $actividad?->name
-                    ?? $turno->recurso?->name
-                    ?? $turno->description
-                    ?? 'Turno reservado',
-                'start' => $turno->start_time,
-                'end' => $turno->end_time,
+                'id' => 'evento-' . $evento->id,
+                'title' => $evento->name ?? 'Evento sin nombre',
+                'start' => $evento->start_time->format('Y-m-d\TH:i:s'),
+                'end' => $evento->end_time->format('Y-m-d\TH:i:s'),
                 'allDay' => false,
                 'extendedProps' => [
-                    'tipo' => $actividad ? 'actividad' : 'turno',
+                    'tipo' => 'Evento',
                     'espacio' => $espacio,
-                    'descripcion' => $actividad?->description
-                        ?? $turno->description,
+                    'subespacios' => $subspaceNames->values(),
+                    'descripcion' => $evento->description,
+                    'responsable' => $evento->user?->name ?? 'No especificado',
+                    'recursos' => $evento->recursos
+                        ->map(fn ($recurso) => "{$recurso->name} (×{$recurso->pivot->cantidad})")
+                        ->values(),
                 ],
             ];
-        })->values();
+        });
 
-        return response()->json($eventos);
+        $historiales = Historial::with(['responsable'])
+            ->when($inicio, function ($query) use ($inicio) {
+                $query->where('fecha_realizacion', '>=', $inicio); 
+            })
+            ->when($fin, function ($query) use ($fin) {
+                $query->where('fecha_realizacion', '<=', $fin);
+            })
+            ->get();
+
+        $eventosHistorial = $historiales->map(function ($historial) {
+            return [
+                'id' => 'historial-' . $historial->id,
+                'title' => $historial->evento_nombre ?? 'Sin nombre', // Usando el nuevo nombre de la columna
+                'start' => $historial->fecha_realizacion ? $historial->fecha_realizacion->format('Y-m-d\TH:i:s') : null, 
+                'end' => $historial->fecha_realizacion ? $historial->fecha_realizacion->format('Y-m-d\TH:i:s') : null, 
+                'allDay' => false, 
+                'extendedProps' => [
+                    'tipo' => 'Historial',
+                    'espacio' => $historial->espacio_nombre ?? 'No especificado',
+                    'descripcion' => $historial->descripcion,
+                    'responsable' => $historial->responsable?->name ?? 'No especificado',
+                    'recurso' => null, 
+                ],
+            ];
+        });
+
+        $todosLosEventos = $eventosMapeados->concat($eventosHistorial);
+
+        return response()->json($todosLosEventos);
     }
 }

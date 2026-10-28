@@ -1,360 +1,105 @@
-
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-
+<html lang="es">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('title', 'GestiON - ISAM')</title>
 
-    <title>@yield('title', 'GestiON')</title>
-
-    {{-- Vite --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-
-    {{-- Estilos adicionales de cada vista --}}
-    @stack('styles')
-
-    {{-- Bootstrap --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    {{-- Font Awesome --}}
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-    <style>
-        :root {
-            --institucional-azul: #003366;
-            --institucional-amarillo: #EDC001;
-            --institucional-blanco: #FFFFFF;
-        }
-
-        body {
-            margin: 0;
-            background-color: #f5f7fa;
-        }
-
-        #wrapper {
-            min-height: 100vh;
-        }
-
-        #sidebar-wrapper {
-            width: 250px;
-            min-height: 100vh;
-            background-color: var(--institucional-azul);
-            color: var(--institucional-blanco);
-            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.08);
-            flex-shrink: 0;
-        }
-
-        .sidebar-heading {
-            height: 70px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 0 20px;
-            background-color: var(--institucional-azul);
-            color: var(--institucional-blanco);
-            font-size: 1.35rem;
-            font-weight: 700;
-            border-bottom: 3px solid var(--institucional-amarillo);
-        }
-
-        .sidebar-logo {
-            width: 38px;
-            height: 38px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: var(--institucional-amarillo);
-            color: var(--institucional-azul);
-            border-radius: 10px;
-        }
-
-        .menu-institucional {
-            background-color: var(--institucional-azul) !important;
-            color: var(--institucional-blanco) !important;
-            border: none !important;
-            padding-top: 12px;
-            padding-bottom: 12px;
-            transition: background-color 180ms ease,
-                        color 180ms ease,
-                        transform 180ms ease,
-                        padding-left 180ms ease;
-        }
-
-        .menu-institucional:hover {
-            background-color: var(--institucional-amarillo) !important;
-            color: var(--institucional-azul) !important;
-            transform: translateX(4px);
-        }
-
-        .menu-institucional i {
-            width: 20px;
-            text-align: center;
-        }
-
-        .menu-logout {
-            margin-top: 10px;
-            background-color: var(--institucional-azul) !important;
-            color: var(--institucional-amarillo) !important;
-            border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
-            padding-top: 14px;
-            padding-bottom: 14px;
-            transition: background-color 180ms ease,
-                        color 180ms ease,
-                        transform 180ms ease;
-        }
-
-        .menu-logout:hover {
-            background-color: var(--institucional-amarillo) !important;
-            color: var(--institucional-azul) !important;
-            transform: translateX(4px);
-        }
-
-        #page-content-wrapper {
-            width: 100%;
-            min-width: 0;
-        }
-
-        .navbar-institucional {
-            height: 70px;
-            box-sizing: border-box;
-            background-color: #FFFFFF !important;
-            border-bottom: 3px solid var(--institucional-amarillo) !important;
-            box-shadow: none !important;
-        }
-
-        .navbar-institucional .nav-link {
-            color: var(--institucional-azul) !important;
-            font-weight: 600;
-            transition: color 180ms ease, transform 180ms ease;
-        }
-
-        .navbar-institucional .nav-link:hover {
-            color: var(--institucional-amarillo) !important;
-            transform: translateY(-1px);
-        }
-
-        .navbar-institucional .dropdown-menu {
-            border: none;
-            border-top: 3px solid var(--institucional-amarillo);
-            box-shadow: 0 8px 20px rgba(0, 51, 102, 0.15);
-            border-radius: 0 0 10px 10px;
-        }
-
-        .navbar-institucional .dropdown-item {
-            color: var(--institucional-azul);
-            transition: background-color 180ms ease,
-                        color 180ms ease,
-                        padding-left 180ms ease;
-        }
-
-        .navbar-institucional .dropdown-item:hover {
-            background-color: var(--institucional-azul);
-            color: var(--institucional-blanco);
-            padding-left: 22px;
-        }
-
-        .alert {
-            border: none;
-            border-left: 5px solid var(--institucional-amarillo);
-            border-radius: 8px;
-        }
-
-        @media (max-width: 768px) {
-            #sidebar-wrapper {
-                width: 210px;
-            }
-
-            .sidebar-heading {
-                font-size: 1.1rem;
-            }
-        }
-    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    @stack('styles')
 </head>
+<body class="app-shell">
+    <div class="background-photo app-background-photo" aria-hidden="true"></div>
+    <header class="app-chrome">
+        <a class="app-brand" href="{{ route('dashboard') }}">
+            <img class="app-brand-logo" src="{{ asset('images/GestiONsolologo.png') }}" alt="GestiON · ISAM">
+        </a>
 
-<body>
-
-<div class="d-flex" id="wrapper">
-
-    {{-- BARRA LATERAL --}}
-    <div id="sidebar-wrapper">
-
-        {{-- LOGO / NOMBRE --}}
-        <div class="sidebar-heading">
-            <div class="sidebar-logo">
-                <i class="fas fa-calendar-check"></i>
-            </div>
-            <span>GestiON</span>
-        </div>
-
-        {{-- MENÚ --}}
-        <div class="list-group list-group-flush">
-
-            {{-- DASHBOARD --}}
-            <a href="{{ route('dashboard') }}"
-               class="list-group-item list-group-item-action menu-institucional">
-                <i class="fas fa-chart-line me-2"></i>
-                Dashboard
+        <nav class="floating-nav" aria-label="Navegación principal">
+            <a class="floating-nav-link {{ request()->routeIs('dashboard') ? 'is-active' : '' }}"
+               href="{{ route('dashboard') }}" @if(request()->routeIs('dashboard')) aria-current="page" @endif>
+                <i class="fa-solid fa-house" aria-hidden="true"></i><span>Inicio</span>
             </a>
-
-            {{-- ACTIVIDADES --}}
-            <a href="{{ route('actividades.index') }}"
-               class="list-group-item list-group-item-action menu-institucional">
-                <i class="fas fa-calendar-days me-2"></i>
-                Actividades
-            </a>
-
-            {{-- TURNOS --}}
-            <a href="{{ route('turnos.index') }}"
-               class="list-group-item list-group-item-action menu-institucional">
-                <i class="fas fa-clock me-2"></i>
-                Turnos
-            </a>
-
-            {{-- HISTORIAL --}}
-            <a href="{{ route('historial.index') }}"
-               class="list-group-item list-group-item-action menu-institucional">
-                <i class="fas fa-clock-rotate-left me-2"></i>
-                Historial
-            </a>
-
-            {{-- CALENDARIO GENERAL --}}
-            <a href="{{ route('calendario.index') }}"
-               class="list-group-item list-group-item-action menu-institucional">
-                <i class="fas fa-calendar-alt me-2"></i>
-                Calendario general
-            </a>
-
-            {{-- OPCIONES DE ADMINISTRADOR --}}
             @can('es-admin')
-
-                {{-- ESPACIOS --}}
-                <a href="{{ route('admin.espacios.index') }}"
-                   class="list-group-item list-group-item-action menu-institucional">
-                    <i class="fas fa-building me-2"></i>
-                    Espacios
+                <a class="floating-nav-link {{ request()->routeIs('eventos.index', 'admin.eventos.*') ? 'is-active' : '' }}"
+                   href="{{ route('eventos.index') }}" @if(request()->routeIs('eventos.index', 'admin.eventos.*')) aria-current="page" @endif>
+                    <i class="fa-regular fa-calendar" aria-hidden="true"></i><span>Eventos</span>
                 </a>
-
-                {{-- RECURSOS --}}
-                <a href="{{ route('admin.recursos.index') }}"
-                   class="list-group-item list-group-item-action menu-institucional">
-                    <i class="fas fa-boxes-stacked me-2"></i>
-                    Recursos
+                <a class="floating-nav-link {{ request()->routeIs('solicitudes.*', 'admin.solicitudes.*') ? 'is-active' : '' }}"
+                   href="{{ route('solicitudes.index') }}" @if(request()->routeIs('solicitudes.*', 'admin.solicitudes.*')) aria-current="page" @endif>
+                    <i class="fa-regular fa-calendar" aria-hidden="true"></i><span>Solicitudes</span>
                 </a>
-
-                {{-- USUARIOS --}}
-                <a href="{{ route('admin.usuarios.index') }}"
-                   class="list-group-item list-group-item-action menu-institucional">
-                    <i class="fas fa-users me-2"></i>
-                    Usuarios
+                <a class="floating-nav-link {{ request()->routeIs('calendario.*') ? 'is-active' : '' }}"
+                   href="{{ route('calendario.index') }}" @if(request()->routeIs('calendario.*')) aria-current="page" @endif>
+                    <i class="fa-regular fa-calendar-days" aria-hidden="true"></i><span>Calendario</span>
                 </a>
-
+                <a class="floating-nav-link {{ request()->routeIs('historial.*') ? 'is-active' : '' }}"
+                   href="{{ route('historial.index') }}" @if(request()->routeIs('historial.*')) aria-current="page" @endif>
+                    <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i><span>Historial</span>
+                </a>
+                <a class="floating-nav-link {{ request()->routeIs('admin.recursos.*') ? 'is-active' : '' }}"
+                   href="{{ route('admin.recursos.index') }}" @if(request()->routeIs('admin.recursos.*')) aria-current="page" @endif>
+                    <i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i><span>Inventario</span>
+                </a>
+            @elsecan('es-profesor')
+                <a class="floating-nav-link {{ request()->routeIs('solicitudes.*') ? 'is-active' : '' }}"
+                   href="{{ route('solicitudes.index') }}" @if(request()->routeIs('solicitudes.*')) aria-current="page" @endif>
+                    <i class="fa-regular fa-calendar" aria-hidden="true"></i><span>Mis solicitudes</span>
+                </a>
+                <a class="floating-nav-link {{ request()->routeIs('calendario.*') ? 'is-active' : '' }}"
+                   href="{{ route('calendario.index') }}" @if(request()->routeIs('calendario.*')) aria-current="page" @endif>
+                    <i class="fa-regular fa-calendar-days" aria-hidden="true"></i><span>Calendario</span>
+                </a>
+                <a class="floating-nav-link {{ request()->routeIs('historial.*') ? 'is-active' : '' }}"
+                   href="{{ route('historial.index') }}" @if(request()->routeIs('historial.*')) aria-current="page" @endif>
+                    <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i><span>Historial</span>
+                </a>
+            @elsecan('es-usuario')
+                <a class="floating-nav-link floating-nav-primary {{ request()->routeIs('eventos.index') ? 'is-active' : '' }}"
+                   href="{{ route('eventos.index') }}" @if(request()->routeIs('eventos.index')) aria-current="page" @endif>
+                    <i class="fa-regular fa-calendar" aria-hidden="true"></i><span>Ver eventos</span>
+                </a>
+                <a class="floating-nav-link {{ request()->routeIs('calendario.*') ? 'is-active' : '' }}"
+                   href="{{ route('calendario.index') }}" @if(request()->routeIs('calendario.*')) aria-current="page" @endif>
+                    <i class="fa-regular fa-calendar-days" aria-hidden="true"></i><span>Calendario</span>
+                </a>
+                <a class="floating-nav-link floating-nav-resource {{ request()->routeIs('solicitudes-recursos.*') ? 'is-active' : '' }}"
+                   href="{{ route('solicitudes-recursos.index') }}" @if(request()->routeIs('solicitudes-recursos.*')) aria-current="page" @endif>
+                    <i class="fa-solid fa-box-open" aria-hidden="true"></i><span>Mis implementos</span>
+                </a>
+            @else
+                <a class="floating-nav-link {{ request()->routeIs('eventos.index') ? 'is-active' : '' }}"
+                   href="{{ route('eventos.index') }}" @if(request()->routeIs('eventos.index')) aria-current="page" @endif>
+                    <i class="fa-regular fa-calendar" aria-hidden="true"></i><span>Eventos</span>
+                </a>
+                <a class="floating-nav-link {{ request()->routeIs('calendario.*') ? 'is-active' : '' }}"
+                   href="{{ route('calendario.index') }}" @if(request()->routeIs('calendario.*')) aria-current="page" @endif>
+                    <i class="fa-regular fa-calendar-days" aria-hidden="true"></i><span>Calendario</span>
+                </a>
             @endcan
-
-            {{-- FORMULARIO DE CIERRE DE SESIÓN --}}
-            <form method="POST"
-                  action="{{ route('logout') }}"
-                  id="logout-form"
-                  style="display: none;">
-                @csrf
-            </form>
-
-            {{-- CERRAR SESIÓN --}}
-            <a href="{{ route('logout') }}"
-               class="list-group-item list-group-item-action menu-logout fw-bold"
-               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-
-                <i class="fas fa-sign-out-alt me-2"></i>
-                Cerrar Sesión
-
-            </a>
-
-        </div>
-    </div>
-
-    {{-- CONTENIDO PRINCIPAL --}}
-    <div id="page-content-wrapper">
-
-        {{-- NAVBAR SUPERIOR --}}
-        <nav class="navbar navbar-expand-lg navbar-institucional border-bottom">
-
-            <div class="container-fluid">
-
-                <div class="collapse navbar-collapse">
-
-                    <ul class="navbar-nav ms-auto mt-2 mt-lg-0">
-
-                        @auth
-                            <li class="nav-item dropdown">
-
-                                <a class="nav-link dropdown-toggle"
-                                   href="#"
-                                   id="navbarDropdown"
-                                   role="button"
-                                   data-bs-toggle="dropdown"
-                                   aria-expanded="false">
-
-                                    <i class="fas fa-user-circle me-1"></i>
-                                    {{ auth()->user()->name }}
-
-                                </a>
-
-                                <div class="dropdown-menu dropdown-menu-end">
-
-                                    <a class="dropdown-item" href="#">
-                                        <i class="fas fa-user me-2"></i>
-                                        Mi Perfil
-                                    </a>
-
-                                    <div class="dropdown-divider"></div>
-
-                                    <form method="POST" action="{{ route('logout') }}">
-                                        @csrf
-
-                                        <a class="dropdown-item"
-                                           href="{{ route('logout') }}"
-                                           onclick="event.preventDefault(); this.closest('form').submit();">
-
-                                            <i class="fas fa-sign-out-alt me-2"></i>
-                                            Cerrar Sesión
-
-                                        </a>
-                                    </form>
-
-                                </div>
-                            </li>
-                        @endauth
-
-                    </ul>
-
-                </div>
-            </div>
         </nav>
 
-        {{-- CONTENIDO DE CADA VISTA --}}
-        <main class="container-fluid p-4">
+        <div class="app-account">
+            <span class="app-account-name">{{ auth()->user()->name }}</span>
+            <a class="app-logout app-profile-link" href="{{ route('profile.edit') }}">
+                <i class="fa-regular fa-user" aria-hidden="true"></i><span>Mi cuenta</span>
+            </a>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button class="app-logout" type="submit">
+                    <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i><span>Cerrar sesión</span>
+                </button>
+            </form>
+        </div>
+    </header>
 
-            {{-- MENSAJE DE ÉXITO --}}
-            @if (session('success'))
-                <div class="alert alert-success shadow-sm">
-                    <i class="fas fa-check-circle me-2"></i>
-                    {{ session('success') }}
-                </div>
-            @endif
+    <main class="app-main">
+        @yield('content')
+    </main>
 
-            @yield('content')
-
-        </main>
-
-    </div>
-</div>
-
-{{-- BOOTSTRAP JS --}}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-{{-- SCRIPTS ADICIONALES DE CADA VISTA --}}
-@stack('scripts')
-
+    @stack('scripts')
 </body>
 </html>

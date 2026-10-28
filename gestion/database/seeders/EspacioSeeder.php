@@ -2,16 +2,15 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Espacio;
+use Illuminate\Database\Seeder;
 
 class EspacioSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
-        Espacio::create(['name' => 'SUM']);
-        Espacio::create(['name' => 'Canchas Exteriores']);
-        Espacio::create(['name' => 'Pabellón de Música']);
-        Espacio::create(['name' => 'Salón de Actos']);
+        foreach (['SUM', 'Canchas Exteriores', 'Pabellón de Música', 'Salón de Actos'] as $name) {
+            Espacio::firstOrCreate(['name' => $name]);
+        }
     }
 }

@@ -6,16 +6,16 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
         $this->call([
             RolSeeder::class,
-            UserSeeder::class, 
+            UserSeeder::class,
             RecursoSeeder::class,
             EspacioSeeder::class,
             SubEspacioSeeder::class,
-            ActividadSeeder::class,
-            TurnoSeeder::class,
+            SolicitudEventoSeeder::class,
+            HistorialSeeder::class,
         ]);
     }
 }

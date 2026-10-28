@@ -12,9 +12,9 @@ class HistorialRecurso extends Model
     protected $fillable = [
         'historial_id',
         'recurso_id',
+        'solicitante_id',
         'recurso_nombre',
         'cantidad',
-        'solicitante_id',
     ];
 
     public function historial(): BelongsTo

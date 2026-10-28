@@ -245,7 +245,7 @@ border-left: 5px solid #003366 !important;
 color: #003366 !important;
 }
 
-.dashboard-turnos .card-header {
+.dashboard-eventos .card-header {
 background-color: #003366 !important;
 color: #FFFFFF !important;
 border-bottom: 3px solid #EDC001 !important;
@@ -256,7 +256,7 @@ background-color: #EDC001 !important;
 color: #003366 !important;
 }
 
-.turno-item:hover {
+.evento-item:hover {
 background-color: rgba(0, 51, 102, 0.05);
 transform: translateX(4px);
 }

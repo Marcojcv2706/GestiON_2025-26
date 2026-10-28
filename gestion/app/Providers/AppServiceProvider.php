@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Pagination\Paginator;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,6 +22,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Paginator::useBootstrapFive();
+
         // Devolverá `true` si el usuario está logueado y su rol es 'Administrador'.
         Gate::define('es-admin', function (User $user) {
         // Primero, nos aseguramos de que el usuario TENGA un rol.
@@ -30,7 +33,11 @@ class AppServiceProvider extends ServiceProvider
         
         // Podrías definir más Gates aquí
         Gate::define('es-profesor', function (User $user) {
-            return $user->rol->name === 'Profesor';
+            return $user->rol?->name === 'Profesor';
+        });
+
+        Gate::define('es-usuario', function (User $user) {
+            return $user->rol?->name === 'Usuario';
         });
     }
 }

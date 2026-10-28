@@ -27,9 +27,19 @@ class User extends Authenticatable
         return $this->belongsTo(Rol::class, 'role_id');
     }
 
-    public function turnos()
+    public function eventos()
     {
-        return $this->hasMany(Turno::class);
+        return $this->hasMany(Evento::class);
+    }
+
+    public function solicitudesEventos()
+    {
+        return $this->hasMany(SolicitudEvento::class);
+    }
+
+    public function decisionesSolicitudes()
+    {
+        return $this->hasMany(SolicitudEventoDecision::class, 'actor_id');
     }
 
     public function notificaciones()

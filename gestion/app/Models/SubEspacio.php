@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 // --- ¡LÍNEA AÑADIDA AQUÍ! ---
 use App\Models\Espacio; 
@@ -37,12 +38,21 @@ class SubEspacio extends Model
     }
 
     /**
-     * Define la relación con Turno.
-     * Un SubEspacio puede tener muchos Turnos.
+     * Define la relación con Evento.
+     * Un SubEspacio puede tener muchos Eventos.
      */
-    public function turnos()
+    public function eventos(): BelongsToMany
     {
-        return $this->hasMany(Turno::class);
+        return $this->belongsToMany(Evento::class, 'evento_sub_espacio')
+            ->withTimestamps()
+            ->orderBy('eventos.start_time');
+    }
+
+    public function solicitudesEvento(): BelongsToMany
+    {
+        return $this->belongsToMany(SolicitudEvento::class, 'solicitud_evento_sub_espacio')
+            ->withTimestamps()
+            ->orderBy('solicitudes_eventos.start_time');
     }
 
     /**

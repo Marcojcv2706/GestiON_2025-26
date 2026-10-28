@@ -5,6 +5,12 @@
     </div>
 @endif
 
+@if (session('error'))
+    <div class="alert alert-danger" role="alert">
+        {{ session('error') }}
+    </div>
+@endif
+
 @if ($errors->any())
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
         <strong>¡Error!</strong> Por favor, corrige los siguientes errores:

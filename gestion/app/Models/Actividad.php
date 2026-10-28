@@ -30,8 +30,8 @@ class Actividad extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function turnos()
+    public function eventos()
     {
-        return $this->hasMany(Turno::class);
+        return $this->hasMany(Evento::class);
     }
 }

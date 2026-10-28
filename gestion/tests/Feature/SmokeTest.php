@@ -24,7 +24,7 @@ test('la página de login carga correctamente', function () {
 test('la página de registro carga correctamente', function () {
     $this->get('/register')
         ->assertOk()
-        ->assertSee('Register');
+        ->assertSee('Registrarse');
 });
 
 // --- Pruebas para Páginas Autenticadas (Usuario Normal) ---
@@ -37,19 +37,19 @@ test('un usuario autenticado puede ver el dashboard', function () {
         ->assertOk();
 });
 
-test('un usuario autenticado puede ver la lista de sus turnos', function () {
+test('un usuario autenticado puede ver la lista de sus eventos', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
-        ->get('/turnos') 
+        ->get('/eventos') 
         ->assertOk();
 });
 
-test('un usuario autenticado puede ver la lista de actividades', function () {
+test('un usuario autenticado puede consultar el calendario', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
-        ->get('/actividades')
+        ->get('/calendario')
         ->assertOk();
 });
 

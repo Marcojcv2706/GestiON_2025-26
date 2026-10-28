@@ -1,4 +1,3 @@
-
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -12,9 +11,9 @@ return new class extends Migration
         Schema::create('historials', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('actividad_id')
+            $table->foreignId('evento_id')
                 ->nullable()
-                ->constrained('actividades')
+                ->constrained('eventos')
                 ->nullOnDelete();
 
             $table->foreignId('responsable_id')
@@ -27,7 +26,7 @@ return new class extends Migration
                 ->constrained('users')
                 ->nullOnDelete();
 
-            $table->string('actividad_nombre');
+            $table->string('evento_nombre');
             $table->text('descripcion')->nullable();
             $table->string('espacio_nombre')->nullable();
             $table->dateTime('fecha_realizacion')->nullable();

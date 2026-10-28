@@ -11,10 +11,10 @@ class Historial extends Model
     protected $table = 'historials';
 
     protected $fillable = [
-        'actividad_id',
+        'evento_id',
         'responsable_id',
         'solicitante_id',
-        'actividad_nombre',
+        'evento_nombre',
         'descripcion',
         'espacio_nombre',
         'fecha_realizacion',
@@ -24,9 +24,9 @@ class Historial extends Model
         'fecha_realizacion' => 'datetime',
     ];
 
-    public function actividad(): BelongsTo
+    public function evento(): BelongsTo
     {
-        return $this->belongsTo(Actividad::class);
+        return $this->belongsTo(Evento::class);
     }
 
     public function responsable(): BelongsTo

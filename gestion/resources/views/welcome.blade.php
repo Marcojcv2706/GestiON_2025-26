@@ -29,9 +29,9 @@
         :root {
             --azul: #003366;
             --amarillo: #EDC001;
+            --amarillo-texto: #806600;
             --blanco: #FFFFFF;
             --gris: #f5f7fa;
-            --gris-texto: #64748b;
         }
 
         body {
@@ -122,7 +122,7 @@
 
             padding: 0.55rem 1.25rem;
 
-            border: 1px solid rgba(0, 51, 102, 0.15);
+            border: 1px solid rgba(0, 51, 102, 0.28);
 
             border-radius: 8px;
 
@@ -131,6 +131,7 @@
             color: var(--azul);
 
             background-color: var(--blanco);
+            box-shadow: 0 3px 10px rgba(0, 37, 74, 0.08);
 
             font-size: 0.875rem;
 
@@ -173,6 +174,18 @@
             padding: 3rem 1rem;
         }
 
+        .welcome-panel {
+            width: min(100%, 760px);
+            margin-top: 1.35rem;
+            padding: 1.7rem 2rem 1.8rem;
+            border: 1px solid rgba(0, 51, 102, 0.2);
+            border-top: 4px solid var(--amarillo);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.94);
+            box-shadow: 0 14px 34px rgba(0, 37, 74, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
         .logo-wrapper {
             display: flex;
 
@@ -213,12 +226,16 @@
 
         p.subtitle {
             max-width: 650px;
+            margin: 0 auto;
+            color: var(--azul);
+            font-size: 1.05rem;
+            font-weight: 500;
+            line-height: 1.65;
+        }
 
-            color: var(--gris-texto);
-
-            font-size: 1rem;
-
-            line-height: 1.6;
+        .subtitle-highlight {
+            color: var(--amarillo-texto);
+            font-weight: 700;
         }
 
         .institutional-line {
@@ -226,7 +243,7 @@
 
             height: 4px;
 
-            margin: 1.25rem auto 0;
+            margin: 1.1rem auto 0;
 
             background-color: var(--amarillo);
 
@@ -241,7 +258,7 @@
 
             gap: 1rem;
 
-            margin-top: 2rem;
+            margin-top: 1.4rem;
         }
 
         .btn {
@@ -280,7 +297,7 @@
             border: 1px solid var(--azul);
 
             box-shadow:
-                0 4px 10px rgba(0, 51, 102, 0.15);
+                0 5px 13px rgba(0, 51, 102, 0.22);
         }
 
         .btn-primary:hover {
@@ -305,7 +322,8 @@
 
             color: var(--azul);
 
-            border: 1px solid rgba(0, 51, 102, 0.2);
+            border: 1px solid rgba(0, 51, 102, 0.34);
+            box-shadow: 0 3px 9px rgba(0, 37, 74, 0.08);
         }
 
         .btn-secondary:hover {
@@ -330,7 +348,7 @@
 
             padding-top: 1rem;
 
-            color: #94a3b8;
+            color: #40566c;
 
             font-size: 0.8rem;
         }
@@ -369,6 +387,11 @@
                 padding: 2rem 0.5rem;
             }
 
+            .welcome-panel {
+                padding: 1.4rem 1.1rem 1.5rem;
+                border-radius: 10px;
+            }
+
             .logo-wrapper {
                 width: 85vw;
 
@@ -390,7 +413,7 @@
             }
 
             p.subtitle {
-                font-size: 0.9rem;
+                font-size: 0.95rem;
             }
 
             .background-photo {
@@ -424,28 +447,30 @@
 
             </div>
 
-            <p class="subtitle">
-                La plataforma central para el Instituto Adventista Superior de Misiones.
-            </p>
+            <section class="welcome-panel" aria-label="Acceso al sistema">
+                <p class="subtitle">
+                    La <span class="subtitle-highlight">plataforma central</span> para el Instituto Adventista Superior de Misiones.
+                </p>
 
-            <div class="institutional-line"></div>
+                <div class="institutional-line"></div>
 
-            <div class="actions">
+                <div class="actions">
 
-                <a href="{{ route('login') }}" class="btn btn-primary">
-                    Iniciar Sesión
-                </a>
+                    <a href="{{ route('login') }}" class="btn btn-primary">
+                        Iniciar Sesión
+                    </a>
 
-                <a href="{{ route('register') }}" class="btn btn-secondary">
-                    Registrarse
-                </a>
+                    <a href="{{ route('register') }}" class="btn btn-secondary">
+                        Registrarse
+                    </a>
 
-            </div>
+                </div>
+            </section>
 
         </main>
 
         <footer>
-            GestiON · Gestión de Turnos
+            GestiON · Gestión de Eventos
         </footer>
 
     </div>

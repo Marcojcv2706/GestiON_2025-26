@@ -33,10 +33,10 @@ class Espacio extends Model
     }
 
     /**
-     * Relación: Un Espacio puede tener muchos Turnos (si aplica).
+     * Relación: Un Espacio puede tener muchos Eventos (si aplica).
      */
-    public function turnos()
+    public function eventos()
     {
-        return $this->hasMany(Turno::class);
+        return $this->hasMany(Evento::class);
     }
 }
