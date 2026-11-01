@@ -449,7 +449,7 @@
 
             <section class="welcome-panel" aria-label="Acceso al sistema">
                 <p class="subtitle">
-                    La <span class="subtitle-highlight">plataforma central</span> para el Instituto Adventista Superior de Misiones.
+                    La <span class="subtitle-highlight">plataforma central</span> para el Instituto Superior Adventista de Misiones.
                 </p>
 
                 <div class="institutional-line"></div>
