@@ -9,6 +9,7 @@ use App\Models\SolicitudEventoDecision;
 use App\Models\SubEspacio;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 
 uses(Tests\TestCase::class, RefreshDatabase::class);
 
@@ -36,7 +37,10 @@ beforeEach(function () {
         'recursos' => [['id' => $this->resource->id, 'cantidad' => 6]],
     ];
     $this->createRequest = function (User $user, array $payload): SolicitudEvento {
-        $this->actingAs($user)->post(route('solicitudes.store'), $payload)->assertRedirect();
+        $this->actingAs($user)
+            ->post(route('solicitudes.store'), $payload)
+            ->assertRedirect(route('solicitudes.index'))
+            ->assertSessionHas('success');
 
         return SolicitudEvento::where('user_id', $user->id)->latest('id')->firstOrFail();
     };
@@ -98,7 +102,7 @@ test('a single request can reserve one, several, all, or no subspaces', function
         ->and(Evento::count())->toBe(0);
 });
 
-test('teachers submit requests without creating events or reserving inventory and only see their own', function () {
+test('teachers can submit event requests without viewing event requests or reserving inventory', function () {
     $own = ($this->createRequest)($this->teacher, $this->payload);
     $other = ($this->createRequest)($this->otherTeacher, array_replace($this->payload, ['name' => 'Solicitud privada']));
 
@@ -110,13 +114,14 @@ test('teachers submit requests without creating events or reserving inventory an
     $this->actingAs($this->teacher)
         ->get(route('solicitudes.index'))
         ->assertOk()
-        ->assertSee('Campeonato')
-        ->assertDontSee('Solicitud privada');
+        ->assertDontSee('Campeonato')
+        ->assertDontSee('Solicitud privada')
+        ->assertSee('Solicitar un evento')
+        ->assertDontSee('name="tipo"', false);
 
     $this->get(route('solicitudes.show', $own))
-        ->assertOk()
-        ->assertSee('Campeonato')
-        ->assertSee('Cancha principal');
+        ->assertForbidden();
+    $this->getJson(route('solicitudes.show', $own))->assertForbidden();
 
     $this->get(route('solicitudes.show', $other))->assertForbidden();
     $this->post('/eventos', $this->payload)->assertForbidden();
@@ -124,6 +129,8 @@ test('teachers submit requests without creating events or reserving inventory an
     $this->actingAs($this->otherUser)
         ->get(route('solicitudes.index'))
         ->assertForbidden();
+    $this->get(route('solicitudes-recursos.index'))->assertOk()
+        ->assertSee('Mis solicitudes de implementos');
     $this->get(route('solicitudes.create'))->assertForbidden();
     $this->post(route('solicitudes.store'), $this->payload)->assertForbidden();
 });
@@ -169,29 +176,16 @@ test('approval checks every requested subspace and creates one calendar event', 
         ->and(Evento::count())->toBe(2);
 });
 
-test('request corrections synchronize added and removed subspaces on the same request', function () {
+test('teachers can no longer edit requests or use the modification-request flow', function () {
     $solicitud = ($this->createRequest)($this->teacher, $this->payload);
-    $this->actingAs($this->admin)->post(route('admin.solicitudes.solicitar-modificacion', $solicitud), [
-        'motivo' => 'Agrega o cambia los subespacios.',
-    ])->assertRedirect();
+    expect(Route::has('admin.solicitudes.solicitar-modificacion'))->toBeFalse()
+        ->and(Route::has('solicitudes.update'))->toBeFalse()
+        ->and(Route::has('solicitudes.reenviar'))->toBeFalse();
 
-    $expanded = array_replace($this->payload, [
-        'sub_espacios' => [$this->subspace->id, $this->secondSubspace->id],
-    ]);
     $this->actingAs($this->teacher)
-        ->put(route('solicitudes.update', $solicitud), $expanded)
-        ->assertRedirect();
-    expect($solicitud->fresh()->subEspacios->modelKeys())
-        ->toBe([$this->subspace->id, $this->secondSubspace->id]);
-
-    $this->put(route('solicitudes.update', $solicitud), array_replace($expanded, [
-        'sub_espacios' => [$this->secondSubspace->id],
-    ]))->assertRedirect();
-    $this->post(route('solicitudes.reenviar', $solicitud))->assertRedirect();
-
-    expect(SolicitudEvento::count())->toBe(1)
-        ->and($solicitud->fresh()->subEspacios->modelKeys())->toBe([$this->secondSubspace->id])
-        ->and($solicitud->fresh()->estado)->toBe(SolicitudEvento::PENDIENTE);
+        ->put('/solicitudes/'.$solicitud->id, array_replace($this->payload, ['name' => 'Intento de edición']))
+        ->assertMethodNotAllowed();
+    expect($solicitud->fresh()->name)->toBe('Campeonato');
 });
 
 test('only admin approval creates a calendar event and reserves resources', function () {
@@ -216,7 +210,7 @@ test('only admin approval creates a calendar event and reserves resources', func
         ->assertJsonFragment(['title' => 'Campeonato']);
 });
 
-test('rejection and modification require a reason and keep request out of the calendar', function () {
+test('event rejection requires a reason, stays private from teachers, and is not published to the calendar', function () {
     $solicitud = ($this->createRequest)($this->teacher, $this->payload);
 
     $this->actingAs($this->admin)
@@ -224,24 +218,25 @@ test('rejection and modification require a reason and keep request out of the ca
         ->assertSessionHasErrors('motivo');
     expect($solicitud->fresh()->estado)->toBe(SolicitudEvento::PENDIENTE);
 
-    $this->post(route('admin.solicitudes.solicitar-modificacion', $solicitud), [
-        'motivo' => 'Elija otro horario.',
-    ])->assertRedirect();
-    expect($solicitud->fresh()->estado)->toBe(SolicitudEvento::MODIFICACION_SOLICITADA);
-
+    $this->post(route('admin.solicitudes.rechazar', $solicitud), [
+        'motivo' => 'El espacio no está disponible.',
+    ])->assertRedirect(route('solicitudes.show', $solicitud))
+        ->assertSessionHas('success', 'Tu solicitud de evento fue rechazada: El espacio no está disponible.');
+    expect($solicitud->fresh()->estado)->toBe(SolicitudEvento::RECHAZADA)
+        ->and($solicitud->fresh()->revisor->id)->toBe($this->admin->id)
+        ->and($solicitud->fresh()->decidido_en)->not->toBeNull();
     $this->getJson(route('api.calendario.index'))
         ->assertOk()
         ->assertJsonMissing(['title' => 'Campeonato']);
 
+    $this->actingAs($this->admin)
+        ->get(route('solicitudes.show', $solicitud))
+        ->assertOk()
+        ->assertSee('La solicitud de evento fue rechazada.')
+        ->assertSee('El espacio no está disponible.');
     $this->actingAs($this->teacher)
-        ->put(route('solicitudes.update', $solicitud), array_replace($this->payload, [
-            'start_time' => now()->addDays(4)->setTime(10, 0)->format('Y-m-d\TH:i'),
-            'end_time' => now()->addDays(4)->setTime(12, 0)->format('Y-m-d\TH:i'),
-        ]))->assertRedirect();
-    $this->post(route('solicitudes.reenviar', $solicitud))->assertRedirect();
-
-    expect($solicitud->fresh()->estado)->toBe(SolicitudEvento::PENDIENTE)
-        ->and(SolicitudEventoDecision::where('solicitud_evento_id', $solicitud->id)->count())->toBe(4);
+        ->get(route('solicitudes.show', $solicitud))
+        ->assertForbidden();
 });
 
 test('approval rechecks current resource stock and subspace conflicts atomically', function () {
@@ -281,6 +276,7 @@ test('admin direct edits require a reason and are recorded', function () {
         'start_time' => now()->addDays(5)->setTime(11, 0)->format('Y-m-d\TH:i'),
         'end_time' => now()->addDays(5)->setTime(13, 0)->format('Y-m-d\TH:i'),
         'sub_espacios' => [$this->subspace->id, $this->secondSubspace->id],
+        'recursos' => [['id' => $this->resource->id, 'cantidad' => 4]],
     ]);
 
     $this->actingAs($this->admin)
@@ -297,5 +293,26 @@ test('admin direct edits require a reason and are recorded', function () {
     expect($solicitud->fresh()->name)->toBe('Campeonato actualizado')
         ->and($solicitud->fresh()->estado)->toBe(SolicitudEvento::PENDIENTE)
         ->and($decision->cambios['sub_espacios']['anterior'])->toBe(['Cancha principal'])
-        ->and($decision->cambios['sub_espacios']['nuevo'])->toBe(['Cancha principal', 'SUM 2']);
+        ->and($decision->cambios['sub_espacios']['nuevo'])->toBe(['Cancha principal', 'SUM 2'])
+        ->and($decision->cambios['recursos']['anterior'])->toBe(['Pelota' => 6])
+        ->and($decision->cambios['recursos']['nuevo'])->toBe(['Pelota' => 4]);
+
+    $this->get(route('solicitudes.show', $solicitud))
+        ->assertOk()
+        ->assertSee('El administrador modificó esta solicitud.')
+        ->assertSee('Horario alternativo disponible.');
+
+    $this->actingAs($this->admin)
+        ->post(route('admin.solicitudes.aprobar', $solicitud))
+        ->assertSessionHas('success', 'Tu solicitud de evento fue aprobada. El administrador realizó cambios; consulta el historial para ver cuáles.');
+
+    $this->actingAs($this->teacher)
+        ->get(route('solicitudes.show', $solicitud))
+        ->assertForbidden();
+
+    $this->actingAs($this->admin)
+        ->get(route('solicitudes.show', $solicitud))
+        ->assertOk()
+        ->assertSee('La solicitud de evento fue aprobada.')
+        ->assertDontSee('Tu solicitud de evento fue aprobada.');
 });

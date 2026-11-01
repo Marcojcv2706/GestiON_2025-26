@@ -69,8 +69,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const startTime = document.getElementById('start_time');
     const endTime = document.getElementById('end_time');
     if (startTime && endTime) {
+        let defaultEndTime = '';
+
+        const oneHourAfter = (value) => {
+            const [date, time] = value.split('T');
+            const [year, month, day] = date.split('-').map(Number);
+            const [hour, minute] = time.split(':').map(Number);
+            const end = new Date(Date.UTC(year, month - 1, day, hour, minute + 60));
+            const pad = (part) => String(part).padStart(2, '0');
+
+            return `${end.getUTCFullYear()}-${pad(end.getUTCMonth() + 1)}-${pad(end.getUTCDate())}T${pad(end.getUTCHours())}:${pad(end.getUTCMinutes())}`;
+        };
+
         const syncEndTimeMinimum = () => {
             endTime.min = startTime.value;
+
+            if (startTime.value && (!endTime.value || endTime.value === defaultEndTime)) {
+                defaultEndTime = oneHourAfter(startTime.value);
+                endTime.value = defaultEndTime;
+            }
         };
 
         syncEndTimeMinimum();

@@ -413,6 +413,15 @@ const enhanceDateInput = (source) => {
         return (!minDate || key >= minDate) && (!maxDate || key <= maxDate);
     };
 
+    const selectableMonth = (month) => {
+        const firstDay = dateKey(new Date(month.getFullYear(), month.getMonth(), 1));
+        const lastDay = dateKey(new Date(month.getFullYear(), month.getMonth() + 1, 0));
+        const minDate = dateOnly(source.min);
+        const maxDate = dateOnly(source.max);
+
+        return (!minDate || lastDay >= minDate) && (!maxDate || firstDay <= maxDate);
+    };
+
     const moveFocus = (offset) => {
         const active = parseDate(document.activeElement?.dataset.date)
             ?? parseDate(dateOnly(source.value))
@@ -524,8 +533,8 @@ const enhanceDateInput = (source) => {
 
         const previousMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1);
         const nextMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 1);
-        previous.disabled = !selectable(dateKey(new Date(previousMonth.getFullYear(), previousMonth.getMonth() + 1, 0)));
-        next.disabled = !selectable(dateKey(nextMonth));
+        previous.disabled = !selectableMonth(previousMonth);
+        next.disabled = !selectableMonth(nextMonth);
         previous.addEventListener('click', () => {
             visibleMonth = previousMonth;
             renderCalendar();
@@ -575,10 +584,7 @@ const enhanceDateInput = (source) => {
                 visibleMonth.getMonth() + direction * (event.shiftKey ? 12 : 1),
                 1
             );
-            const minMonth = parseDate(dateOnly(source.min));
-            const maxMonth = parseDate(dateOnly(source.max));
-            if ((!minMonth || nextMonth >= new Date(minMonth.getFullYear(), minMonth.getMonth(), 1))
-                && (!maxMonth || nextMonth <= new Date(maxMonth.getFullYear(), maxMonth.getMonth(), 1))) {
+            if (selectableMonth(nextMonth)) {
                 visibleMonth = nextMonth;
                 renderCalendar();
                 calendar.querySelector('.gestion-calendar-day:not(:disabled)')?.focus();

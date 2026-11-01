@@ -39,5 +39,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('es-usuario', function (User $user) {
             return $user->rol?->name === 'Usuario';
         });
+
+        Gate::define('gestionar-solicitudes-recursos', function (User $user) {
+            return $user->rol?->name === 'Administrador'
+                || $user->rol?->name === 'Profesor';
+        });
     }
 }

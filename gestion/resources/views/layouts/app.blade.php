@@ -28,8 +28,8 @@
                    href="{{ route('eventos.index') }}" @if(request()->routeIs('eventos.index', 'admin.eventos.*')) aria-current="page" @endif>
                     <i class="fa-regular fa-calendar" aria-hidden="true"></i><span>Eventos</span>
                 </a>
-                <a class="floating-nav-link {{ request()->routeIs('solicitudes.*', 'admin.solicitudes.*') ? 'is-active' : '' }}"
-                   href="{{ route('solicitudes.index') }}" @if(request()->routeIs('solicitudes.*', 'admin.solicitudes.*')) aria-current="page" @endif>
+                <a class="floating-nav-link {{ request()->routeIs('solicitudes.*', 'solicitudes-recursos.*', 'admin.solicitudes.*', 'admin.solicitudes-recursos.*') ? 'is-active' : '' }}"
+                   href="{{ route('solicitudes.index') }}" @if(request()->routeIs('solicitudes.*', 'solicitudes-recursos.*', 'admin.solicitudes.*', 'admin.solicitudes-recursos.*')) aria-current="page" @endif>
                     <i class="fa-regular fa-calendar" aria-hidden="true"></i><span>Solicitudes</span>
                 </a>
                 <a class="floating-nav-link {{ request()->routeIs('calendario.*') ? 'is-active' : '' }}"
@@ -45,9 +45,9 @@
                     <i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i><span>Inventario</span>
                 </a>
             @elsecan('es-profesor')
-                <a class="floating-nav-link {{ request()->routeIs('solicitudes.*') ? 'is-active' : '' }}"
-                   href="{{ route('solicitudes.index') }}" @if(request()->routeIs('solicitudes.*')) aria-current="page" @endif>
-                    <i class="fa-regular fa-calendar" aria-hidden="true"></i><span>Mis solicitudes</span>
+                <a class="floating-nav-link {{ request()->routeIs('solicitudes.*', 'solicitudes-recursos.*', 'admin.solicitudes-recursos.*') ? 'is-active' : '' }}"
+                   href="{{ route('solicitudes.index') }}" @if(request()->routeIs('solicitudes.*', 'solicitudes-recursos.*', 'admin.solicitudes-recursos.*')) aria-current="page" @endif>
+                    <i class="fa-regular fa-rectangle-list" aria-hidden="true"></i><span>Solicitudes</span>
                 </a>
                 <a class="floating-nav-link {{ request()->routeIs('calendario.*') ? 'is-active' : '' }}"
                    href="{{ route('calendario.index') }}" @if(request()->routeIs('calendario.*')) aria-current="page" @endif>
@@ -68,7 +68,7 @@
                 </a>
                 <a class="floating-nav-link floating-nav-resource {{ request()->routeIs('solicitudes-recursos.*') ? 'is-active' : '' }}"
                    href="{{ route('solicitudes-recursos.index') }}" @if(request()->routeIs('solicitudes-recursos.*')) aria-current="page" @endif>
-                    <i class="fa-solid fa-box-open" aria-hidden="true"></i><span>Mis implementos</span>
+                    <i class="fa-regular fa-rectangle-list" aria-hidden="true"></i><span>Solicitudes</span>
                 </a>
             @else
                 <a class="floating-nav-link {{ request()->routeIs('eventos.index') ? 'is-active' : '' }}"
@@ -84,9 +84,6 @@
 
         <div class="app-account">
             <span class="app-account-name">{{ auth()->user()->name }}</span>
-            <a class="app-logout app-profile-link" href="{{ route('profile.edit') }}">
-                <i class="fa-regular fa-user" aria-hidden="true"></i><span>Mi cuenta</span>
-            </a>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button class="app-logout" type="submit">

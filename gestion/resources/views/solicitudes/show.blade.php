@@ -5,7 +5,7 @@
 @section('content')
 <div class="editorial-page">
     <header class="editorial-page-heading">
-        <p class="eyebrow"><span class="eyebrow-line"></span> SOLICITUD #{{ $solicitud->id }}</p>
+        <p class="eyebrow"><span class="eyebrow-line"></span> SOLICITUD DE EVENTO #{{ $solicitud->id }}</p>
         <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
             <div>
                 <h1>{{ $solicitud->name }}</h1>
@@ -23,32 +23,47 @@
         </div>
     </header>
     @include('partials._session-status')
-    @if($solicitud->observacion_admin)
-        <div class="alert alert-warning request-status-message" role="status">
-            <strong>
-                @if($solicitud->estado === \App\Models\SolicitudEvento::RECHAZADA)
-                    Solicitud rechazada.
-                @elseif($solicitud->estado === \App\Models\SolicitudEvento::MODIFICACION_SOLICITADA)
-                    Se necesitan cambios para continuar.
-                @else
-                    Nota del equipo{{ $solicitud->revisor ? ' · '.$solicitud->revisor->name : '' }}.
-                @endif
-            </strong>
-            <span>Motivo: {{ $solicitud->observacion_admin }}</span>
-            @if($solicitud->estado === \App\Models\SolicitudEvento::MODIFICACION_SOLICITADA)
-                @php($lastDecision = $solicitud->decisiones->sortByDesc('id')->first())
-                @if($lastDecision?->accion === 'solicitud_corregida')
-                    <span>Ya guardaste los cambios. Envíalos nuevamente para que podamos revisarlos.</span>
-                @else
-                    <span>Abre la solicitud para corregir los datos indicados.</span>
-                @endif
+    @php($adminModifications = $solicitud->decisiones->where('accion', 'solicitud_modificada_por_admin'))
+    @if($solicitud->estado === \App\Models\SolicitudEvento::APROBADA)
+        <div class="alert alert-success request-status-message" role="status">
+            <strong>{{ $isAdmin ? 'La solicitud de evento fue aprobada.' : 'Tu solicitud de evento fue aprobada.' }}</strong>
+            @if($adminModifications->isNotEmpty())
+                <span>El administrador también realizó modificaciones; consulta el historial para ver cuáles.</span>
             @endif
+            @if($solicitud->revisor)
+                <span>Aprobada por {{ $solicitud->revisor->name }}{{ $solicitud->decidido_en ? ' el '.$solicitud->decidido_en->format('d/m/Y H:i') : '' }}.</span>
+            @endif
+        </div>
+    @elseif($solicitud->estado === \App\Models\SolicitudEvento::RECHAZADA)
+        <div class="alert alert-danger request-status-message" role="status">
+            <strong>{{ $isAdmin ? 'La solicitud de evento fue rechazada.' : 'Tu solicitud de evento fue rechazada.' }}</strong>
+            @if($solicitud->observacion_admin)<span>Motivo: {{ $solicitud->observacion_admin }}</span>@endif
+            @if($solicitud->revisor)
+                <span>Revisada por {{ $solicitud->revisor->name }}{{ $solicitud->decidido_en ? ' el '.$solicitud->decidido_en->format('d/m/Y H:i') : '' }}.</span>
+            @endif
+        </div>
+    @elseif($solicitud->estado === \App\Models\SolicitudEvento::MODIFICACION_SOLICITADA)
+        <div class="alert alert-warning request-status-message" role="status">
+            Esta solicitud conserva un estado de revisión anterior. El administrador puede editarla directamente y continuar con la aprobación o el rechazo.
+        </div>
+    @endif
+
+    @if($adminModifications->isNotEmpty())
+        <div class="alert alert-info request-status-message" role="status">
+            <strong>El administrador modificó esta solicitud.</strong>
+            @foreach($adminModifications as $modification)
+                @if($modification->actor)
+                    <span>Modificada por {{ $modification->actor->name }} el {{ $modification->created_at->format('d/m/Y H:i') }}.</span>
+                @endif
+                @if($modification->motivo)<span>Nota: {{ $modification->motivo }}</span>@endif
+            @endforeach
         </div>
     @endif
 
     <section class="form-editorial-panel mb-4">
         <dl class="row mb-0">
             <dt class="col-sm-3">Solicitante</dt><dd class="col-sm-9">{{ $solicitud->user->name }}</dd>
+            <dt class="col-sm-3">Fecha de solicitud</dt><dd class="col-sm-9">{{ $solicitud->created_at->locale('es')->translatedFormat('d F Y, H:i') }}</dd>
             <dt class="col-sm-3">Espacio</dt>
             <dd class="col-sm-9">
                 {{ $solicitud->espacio->name }}
@@ -70,41 +85,23 @@
         </dl>
     </section>
 
-    @if(!$isAdmin && $solicitud->estado === \App\Models\SolicitudEvento::MODIFICACION_SOLICITADA)
-        @php($lastDecision = $solicitud->decisiones->sortByDesc('id')->first())
-        <div class="form-actions mb-4">
-            @if($lastDecision?->accion === 'solicitud_corregida')
-                <form action="{{ route('solicitudes.reenviar', $solicitud) }}" method="POST">
-                    @csrf
-                    <button class="action-link action-link-primary request-submit-button" type="submit">Enviar nuevamente</button>
-                </form>
-            @else
-                <a class="action-link action-link-primary" href="{{ route('solicitudes.edit', $solicitud) }}">Revisar y modificar</a>
-            @endif
-        </div>
-    @endif
-
     @if($solicitud->evento)
         <p><a class="action-link action-link-secondary" href="{{ route('eventos.index') }}">Ver evento aprobado</a></p>
     @endif
 
-    @if($isAdmin && $solicitud->estado === \App\Models\SolicitudEvento::PENDIENTE)
+    @if($isAdmin && in_array($solicitud->estado, [\App\Models\SolicitudEvento::PENDIENTE, \App\Models\SolicitudEvento::MODIFICACION_SOLICITADA], true))
         <section class="form-editorial-panel mb-4">
             <h2 class="h5">Decisión administrativa</h2>
             <div class="form-actions">
-                <form action="{{ route('admin.solicitudes.aprobar', $solicitud) }}" method="POST">
+                <form action="{{ route('admin.solicitudes.aprobar', $solicitud) }}" method="POST"
+                      onsubmit="return confirm('¿Confirmas que quieres aprobar esta solicitud de evento?');">
                     @csrf
                     <button class="action-link action-link-primary" type="submit">Aprobar</button>
                 </form>
             </div>
             <div class="row g-3 mt-2">
-                <form class="col-md-6" action="{{ route('admin.solicitudes.solicitar-modificacion', $solicitud) }}" method="POST">
-                    @csrf
-                    <label class="form-label" for="motivo-modificacion">Motivo de modificación *</label>
-                    <textarea class="form-control" id="motivo-modificacion" name="motivo" rows="3" required minlength="5"></textarea>
-                    <button class="action-link action-link-secondary mt-2" type="submit">Solicitar modificación</button>
-                </form>
-                <form class="col-md-6" action="{{ route('admin.solicitudes.rechazar', $solicitud) }}" method="POST">
+                <form class="col-md-6" action="{{ route('admin.solicitudes.rechazar', $solicitud) }}" method="POST"
+                      onsubmit="return confirm('¿Confirmas que quieres rechazar esta solicitud?');">
                     @csrf
                     <label class="form-label" for="motivo-rechazo">Motivo del rechazo *</label>
                     <textarea class="form-control" id="motivo-rechazo" name="motivo" rows="3" required minlength="5"></textarea>
@@ -114,7 +111,7 @@
         </section>
 
         <details class="form-editorial-panel mb-4">
-            <summary>Modificar datos de la solicitud</summary>
+            <summary>Editar solicitud como administrador</summary>
             <form class="mt-4" action="{{ route('admin.solicitudes.modificar', $solicitud) }}" method="POST">
                 @csrf
                 @method('PUT')
@@ -125,6 +122,7 @@
 
     <section class="form-editorial-panel">
         <h2 class="h5">Historial de decisiones</h2>
+        @php($changeLabels = ['name' => 'Nombre', 'description' => 'Descripción', 'start_time' => 'Inicio', 'end_time' => 'Finalización', 'espacio_id' => 'Espacio', 'sub_espacios' => 'Subespacios', 'recursos' => 'Implementos'])
         @forelse($solicitud->decisiones as $decision)
             <article class="history-entry-content border-bottom py-3">
                 <strong>{{ $decision->created_at->format('d/m/Y H:i') }} · {{ $decision->actor?->name ?? 'Usuario' }}</strong>
@@ -134,7 +132,7 @@
                 @endif
                 @if($decision->motivo)<p class="mb-1">Motivo: {{ $decision->motivo }}</p>@endif
                 @if($decision->cambios)
-                    <ul class="mb-0">@foreach($decision->cambios as $campo => $cambio)<li>{{ $campo }}: {{ json_encode($cambio, JSON_UNESCAPED_UNICODE) }}</li>@endforeach</ul>
+                    <ul class="mb-0">@foreach($decision->cambios as $campo => $cambio)<li>{{ $changeLabels[$campo] ?? $campo }}: {{ json_encode($cambio, JSON_UNESCAPED_UNICODE) }}</li>@endforeach</ul>
                 @endif
             </article>
         @empty

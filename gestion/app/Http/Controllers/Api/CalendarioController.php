@@ -63,6 +63,7 @@ class CalendarioController extends Controller
         });
 
         $historiales = Historial::with(['responsable'])
+            ->where('evento_nombre', 'not like', 'Solicitud de implementos #%')
             ->when($inicio, function ($query) use ($inicio) {
                 $query->where('fecha_realizacion', '>=', $inicio); 
             })

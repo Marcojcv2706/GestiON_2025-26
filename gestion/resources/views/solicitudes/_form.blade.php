@@ -39,7 +39,7 @@
 
 <fieldset class="form-section-block">
     <legend>2. ¿Cuándo será?</legend>
-    <p class="form-section-help">Indica la fecha y la hora de inicio y finalización.</p>
+    <p class="form-section-help">La duración inicial será de una hora. Puedes ajustar la hora de finalización.</p>
     <div class="row g-3">
         <div class="col-md-6">
             <label for="start_time" class="form-label">Fecha y hora de inicio <span>*</span></label>

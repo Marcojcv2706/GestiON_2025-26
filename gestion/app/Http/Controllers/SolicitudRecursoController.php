@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Recurso;
+use App\Models\Historial;
+use App\Models\HistorialRecurso;
 use App\Models\SolicitudRecurso;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,17 +14,45 @@ class SolicitudRecursoController extends Controller
 {
     public function index(Request $request)
     {
-        $isAdmin = $request->user()->can('es-admin');
-        abort_unless($isAdmin || $request->user()->can('es-usuario'), 403);
-        $query = SolicitudRecurso::with(['user', 'recursos'])->latest();
+        $user = $request->user();
+        if ($user->can('es-usuario')) {
+            $solicitudes = SolicitudRecurso::query()
+                ->with('recursos')
+                ->where('user_id', $user->id)
+                ->orderByDesc('created_at')
+                ->orderByDesc('id')
+                ->paginate(10);
 
-        if (!$isAdmin) {
-            $query->where('user_id', $request->user()->id);
+            return view('solicitudes-recursos.index', compact('solicitudes'));
         }
 
-        return view('solicitudes-recursos.index', [
-            'solicitudes' => $query->paginate(12),
+        abort_unless($user->can('es-admin') || $user->can('es-profesor'), 403);
+
+        return redirect()->route('solicitudes.index', ['tipo' => 'implementos']);
+    }
+
+    public function show(Request $request, SolicitudRecurso $solicitud)
+    {
+        $user = $request->user();
+        $isAdmin = $user->can('es-admin');
+        $isTeacher = $user->can('es-profesor');
+        $isOwner = (int) $solicitud->user_id === (int) $user->id;
+        abort_unless(
+            $isAdmin
+                || ($user->can('es-usuario') && $isOwner)
+                || ($isTeacher && (
+                    $solicitud->estado === SolicitudRecurso::PENDIENTE
+                    || (int) $solicitud->revisado_por === (int) $user->id
+                )),
+            403
+        );
+        $solicitud->load(['user', 'revisor', 'recursos']);
+
+        return view('solicitudes-recursos.show', [
+            'solicitud' => $solicitud,
             'isAdmin' => $isAdmin,
+            'isOwner' => $isOwner,
+            'canReview' => $user->can('gestionar-solicitudes-recursos'),
         ]);
     }
 
@@ -43,7 +73,7 @@ class SolicitudRecursoController extends Controller
             'fecha_uso' => ['required', 'date', 'after_or_equal:today'],
             'motivo' => ['required', 'string', 'max:2000'],
             'recursos' => ['required', 'array'],
-            'recursos.*' => ['required', 'integer', 'min:0'],
+            'recursos.*' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $quantities = collect($validated['recursos'])
@@ -99,7 +129,7 @@ class SolicitudRecursoController extends Controller
 
     public function aprobar(Request $request, SolicitudRecurso $solicitud)
     {
-        abort_unless($request->user()->can('es-admin'), 403);
+        abort_unless($request->user()->can('gestionar-solicitudes-recursos'), 403);
 
         DB::transaction(function () use ($request, $solicitud) {
             $locked = SolicitudRecurso::query()
@@ -135,6 +165,24 @@ class SolicitudRecursoController extends Controller
                 $resource->save();
             }
 
+            $history = Historial::create([
+                'responsable_id' => $request->user()->id,
+                'solicitante_id' => $locked->user_id,
+                'evento_nombre' => 'Solicitud de implementos #'.$locked->id,
+                'descripcion' => $locked->motivo,
+                'fecha_realizacion' => $locked->fecha_uso,
+            ]);
+
+            foreach ($locked->recursos as $requestedResource) {
+                HistorialRecurso::create([
+                    'historial_id' => $history->id,
+                    'recurso_id' => $requestedResource->id,
+                    'solicitante_id' => $locked->user_id,
+                    'recurso_nombre' => $requestedResource->name,
+                    'cantidad' => $requestedResource->pivot->cantidad,
+                ]);
+            }
+
             $locked->update([
                 'estado' => SolicitudRecurso::APROBADA,
                 'revisado_por' => $request->user()->id,
@@ -143,12 +191,13 @@ class SolicitudRecursoController extends Controller
             ]);
         });
 
-        return back()->with('success', 'Solicitud aprobada. Los implementos quedaron reservados.');
+        return redirect()->route('solicitudes-recursos.show', $solicitud)
+            ->with('success', 'La solicitud de implementos fue aprobada y los implementos quedaron reservados.');
     }
 
     public function rechazar(Request $request, SolicitudRecurso $solicitud)
     {
-        abort_unless($request->user()->can('es-admin'), 403);
+        abort_unless($request->user()->can('gestionar-solicitudes-recursos'), 403);
         $validated = $request->validate([
             'observacion_admin' => ['required', 'string', 'max:2000'],
         ]);
@@ -164,7 +213,8 @@ class SolicitudRecursoController extends Controller
             ]);
         });
 
-        return back()->with('success', 'La solicitud fue rechazada y el motivo quedó registrado.');
+        return redirect()->route('solicitudes-recursos.show', $solicitud)
+            ->with('success', 'La solicitud de implementos fue rechazada: '.$validated['observacion_admin']);
     }
 
     public function devolver(Request $request, SolicitudRecurso $solicitud)

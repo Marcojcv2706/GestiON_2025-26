@@ -17,26 +17,6 @@ use Illuminate\Validation\ValidationException;
 
 class SolicitudEventoController extends Controller
 {
-    public function index(Request $request)
-    {
-        $isAdmin = $request->user()->can('es-admin');
-        abort_unless($isAdmin || $request->user()->can('es-profesor'), 403);
-        $query = SolicitudEvento::with(['user', 'espacio', 'subEspacios', 'subEspacio', 'recursos'])
-            ->latest();
-
-        if (!$isAdmin) {
-            $query->where('user_id', $request->user()->id);
-        } elseif ($request->filled('estado')) {
-            $query->where('estado', $request->string('estado'));
-        }
-
-        return view('solicitudes.index', [
-            'solicitudes' => $query->paginate(12)->withQueryString(),
-            'isAdmin' => $isAdmin,
-            'estado' => $request->input('estado', ''),
-        ]);
-    }
-
     public function create()
     {
         return view('solicitudes.create', $this->formData());
@@ -59,7 +39,7 @@ class SolicitudEventoController extends Controller
             return $solicitud;
         });
 
-        return redirect()->route('solicitudes.show', $solicitud)
+        return redirect()->route('solicitudes.index')
             ->with('success', 'Tu solicitud fue enviada y está pendiente de revisión.');
     }
 
@@ -84,72 +64,6 @@ class SolicitudEventoController extends Controller
         ]);
     }
 
-    public function edit(Request $request, SolicitudEvento $solicitud)
-    {
-        $this->authorizeOwner($request, $solicitud);
-        abort_unless($solicitud->estado === SolicitudEvento::MODIFICACION_SOLICITADA, 403);
-        $solicitud->load(['recursos', 'subEspacios']);
-
-        return view('solicitudes.edit', [
-            'solicitud' => $solicitud,
-            ...$this->formData($solicitud),
-        ]);
-    }
-
-    public function update(Request $request, SolicitudEvento $solicitud)
-    {
-        $this->authorizeOwner($request, $solicitud);
-        abort_unless($solicitud->estado === SolicitudEvento::MODIFICACION_SOLICITADA, 403);
-        $this->normalizeLegacySubspaceInput($request);
-        $validated = $this->validateSolicitud($request);
-
-        DB::transaction(function () use ($request, $solicitud, $validated) {
-            $locked = SolicitudEvento::query()->lockForUpdate()->findOrFail($solicitud->id);
-            abort_unless($locked->user_id === $request->user()->id, 403);
-            abort_unless($locked->estado === SolicitudEvento::MODIFICACION_SOLICITADA, 403);
-            $locked->fill($this->solicitudFields($validated))->save();
-            $locked->subEspacios()->sync($validated['sub_espacios'] ?? []);
-            $locked->recursos()->sync($this->resourcePivot($validated));
-            $this->logDecision(
-                $locked,
-                $request,
-                'solicitud_corregida',
-                SolicitudEvento::MODIFICACION_SOLICITADA,
-                SolicitudEvento::MODIFICACION_SOLICITADA
-            );
-        });
-
-        return redirect()->route('solicitudes.show', $solicitud)
-            ->with('success', 'Cambios guardados. Revisa la solicitud y envíala nuevamente.');
-    }
-
-    public function reenviar(Request $request, SolicitudEvento $solicitud)
-    {
-        $this->authorizeOwner($request, $solicitud);
-
-        DB::transaction(function () use ($request, $solicitud) {
-            $locked = SolicitudEvento::query()->lockForUpdate()->findOrFail($solicitud->id);
-            abort_unless($locked->user_id === $request->user()->id, 403);
-            abort_unless($locked->estado === SolicitudEvento::MODIFICACION_SOLICITADA, 403);
-            $locked->update([
-                'estado' => SolicitudEvento::PENDIENTE,
-                'observacion_admin' => null,
-                'revisado_por' => null,
-                'decidido_en' => null,
-            ]);
-            $this->logDecision(
-                $locked,
-                $request,
-                'solicitud_reenviada',
-                SolicitudEvento::MODIFICACION_SOLICITADA,
-                SolicitudEvento::PENDIENTE
-            );
-        });
-
-        return redirect()->route('solicitudes.show', $solicitud)
-            ->with('success', 'Tu solicitud fue enviada nuevamente para revisión.');
-    }
-
     public function aprobar(
         Request $request,
         SolicitudEvento $solicitud,
@@ -159,12 +73,16 @@ class SolicitudEventoController extends Controller
     {
         abort_unless($request->user()->can('es-admin'), 403);
 
-        DB::transaction(function () use ($request, $solicitud, $inventory, $conflicts) {
+        $wasModified = DB::transaction(function () use ($request, $solicitud, $inventory, $conflicts) {
             $locked = SolicitudEvento::query()
                 ->with(['recursos', 'user', 'subEspacios'])
                 ->lockForUpdate()
                 ->findOrFail($solicitud->id);
             $this->ensurePending($locked);
+            $previousState = $locked->estado;
+            $wasModified = $locked->decisiones()
+                ->where('accion', 'solicitud_modificada_por_admin')
+                ->exists();
 
             $subspaceIds = $this->subspaceIds($locked);
             $conflicts->ensureSubspacesAvailable(
@@ -197,11 +115,18 @@ class SolicitudEventoController extends Controller
                 'observacion_admin' => null,
                 'decidido_en' => now(),
             ]);
-            $this->logDecision($locked, $request, 'aprobada', SolicitudEvento::PENDIENTE, SolicitudEvento::APROBADA);
+            $this->logDecision($locked, $request, 'aprobada', $previousState, SolicitudEvento::APROBADA);
+
+            return $wasModified;
         });
 
         return redirect()->route('solicitudes.show', $solicitud)
-            ->with('success', 'Solicitud aprobada. El evento ya aparece en el calendario.');
+            ->with(
+                'success',
+                $wasModified
+                    ? 'Tu solicitud de evento fue aprobada. El administrador realizó cambios; consulta el historial para ver cuáles.'
+                    : 'Tu solicitud de evento fue aprobada.'
+            );
     }
 
     public function rechazar(Request $request, SolicitudEvento $solicitud)
@@ -212,17 +137,6 @@ class SolicitudEventoController extends Controller
             SolicitudEvento::RECHAZADA,
             'rechazada',
             'La solicitud fue rechazada.'
-        );
-    }
-
-    public function solicitarModificacion(Request $request, SolicitudEvento $solicitud)
-    {
-        return $this->decidirConMotivo(
-            $request,
-            $solicitud,
-            SolicitudEvento::MODIFICACION_SOLICITADA,
-            'modificacion_solicitada',
-            'Se solicitaron modificaciones a la solicitud.'
         );
     }
 
@@ -238,11 +152,13 @@ class SolicitudEventoController extends Controller
         DB::transaction(function () use ($request, $solicitud, $validated) {
             $locked = SolicitudEvento::query()->with(['recursos', 'subEspacios'])->lockForUpdate()->findOrFail($solicitud->id);
             $this->ensurePending($locked);
+            $previousState = $locked->estado;
             $changes = $this->changesFor($locked, $validated);
             $locked->fill($this->solicitudFields($validated))->save();
             $locked->subEspacios()->sync($validated['sub_espacios'] ?? []);
             $locked->recursos()->sync($this->resourcePivot($validated));
             $locked->update([
+                'estado' => SolicitudEvento::PENDIENTE,
                 'revisado_por' => $request->user()->id,
                 'observacion_admin' => $validated['motivo'],
             ]);
@@ -250,7 +166,7 @@ class SolicitudEventoController extends Controller
                 $locked,
                 $request,
                 'solicitud_modificada_por_admin',
-                SolicitudEvento::PENDIENTE,
+                $previousState,
                 SolicitudEvento::PENDIENTE,
                 $validated['motivo'],
                 $changes
@@ -286,7 +202,11 @@ class SolicitudEventoController extends Controller
             $this->logDecision($locked, $request, $action, $previousState, $newState, $validated['motivo']);
         });
 
-        return redirect()->route('solicitudes.show', $solicitud)->with('success', $message);
+        $statusMessage = $newState === SolicitudEvento::RECHAZADA
+            ? 'Tu solicitud de evento fue rechazada: '.$validated['motivo']
+            : $message;
+
+        return redirect()->route('solicitudes.show', $solicitud)->with('success', $statusMessage);
     }
 
     private function validateSolicitud(Request $request): array
@@ -379,21 +299,15 @@ class SolicitudEventoController extends Controller
     private function authorizeSolicitud(Request $request, SolicitudEvento $solicitud): void
     {
         $isAdmin = $request->user()->can('es-admin');
-        $isTeacher = $request->user()->can('es-profesor');
-        abort_unless($isAdmin || ($isTeacher && $solicitud->user_id === $request->user()->id), 403);
-    }
-
-    private function authorizeOwner(Request $request, SolicitudEvento $solicitud): void
-    {
-        abort_unless(
-            $request->user()->can('es-profesor') && $solicitud->user_id === $request->user()->id,
-            403
-        );
+        abort_unless($isAdmin, 403);
     }
 
     private function ensurePending(SolicitudEvento $solicitud): void
     {
-        if ($solicitud->estado !== SolicitudEvento::PENDIENTE) {
+        if (!in_array($solicitud->estado, [
+            SolicitudEvento::PENDIENTE,
+            SolicitudEvento::MODIFICACION_SOLICITADA,
+        ], true)) {
             throw ValidationException::withMessages([
                 'solicitud' => 'Solo se pueden revisar solicitudes pendientes.',
             ]);
@@ -424,8 +338,18 @@ class SolicitudEventoController extends Controller
     {
         $changes = [];
         foreach (['name', 'description', 'start_time', 'end_time', 'espacio_id'] as $field) {
-            $oldValue = (string) $solicitud->{$field};
-            $newValue = (string) ($validated[$field] ?? '');
+            $oldValue = $field === 'espacio_id'
+                ? Espacio::whereKey($solicitud->espacio_id)->value('name')
+                : $solicitud->{$field};
+            $newValue = $field === 'espacio_id'
+                ? Espacio::whereKey($validated[$field])->value('name')
+                : ($validated[$field] ?? '');
+            $oldValue = $oldValue instanceof \DateTimeInterface
+                ? $oldValue->format('Y-m-d H:i:s')
+                : (string) $oldValue;
+            $newValue = $newValue instanceof \DateTimeInterface
+                ? $newValue->format('Y-m-d H:i:s')
+                : (string) $newValue;
             if ($oldValue !== $newValue) {
                 $changes[$field] = ['anterior' => $oldValue, 'nuevo' => $newValue];
             }
@@ -443,11 +367,14 @@ class SolicitudEventoController extends Controller
         }
 
         $oldResources = $solicitud->recursos
-            ->mapWithKeys(fn (Recurso $recurso) => [$recurso->id => (int) $recurso->pivot->cantidad])
+            ->mapWithKeys(fn (Recurso $recurso) => [$recurso->name => (int) $recurso->pivot->cantidad])
             ->all();
-        $newResources = collect($this->resourcePivot($validated))
-            ->map(fn (array $pivot) => (int) $pivot['cantidad'])
-            ->all();
+        $resourcePivot = $this->resourcePivot($validated);
+        $resourceNames = Recurso::whereKey(array_keys($resourcePivot))->pluck('name', 'id');
+        $newResources = [];
+        foreach ($resourcePivot as $resourceId => $pivot) {
+            $newResources[$resourceNames->get($resourceId) ?? (string) $resourceId] = (int) $pivot['cantidad'];
+        }
         if ($oldResources !== $newResources) {
             $changes['recursos'] = ['anterior' => $oldResources, 'nuevo' => $newResources];
         }

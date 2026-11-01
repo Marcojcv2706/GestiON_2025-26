@@ -1,35 +1,39 @@
-# Dockerfile para Laravel + PHP-FPM
-FROM php:8.2-fpm
+FROM node:24.0.1-alpine AS node
 
-# Instalar extensiones de PHP necesarias y utilidades
-RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
-    zip \
-    libpng-dev \
-    libonig-dev \
-    libxml2-dev \
-    curl \
-    && docker-php-ext-install pdo_mysql mbstring gd xml
+WORKDIR /var/www/html
 
-# Instalar Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY package.json package-lock.json ./
+RUN npm ci
 
-# Crear directorio de trabajo
-WORKDIR /var/www
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173", "--strictPort"]
 
-# Copiar archivos del proyecto
+FROM php:8.4.7-fpm AS app
+
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        libfreetype6-dev \
+        libjpeg62-turbo-dev \
+        libonig-dev \
+        libpng-dev \
+        libxml2-dev \
+        libzip-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j"$(nproc)" gd mbstring pdo_mysql zip xml \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=composer:2.8.9 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /var/www/html
+
 COPY . .
 
-# Instalar dependencias de Laravel (sin dev para producción)
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-interaction --prefer-dist --no-progress \
+    && mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R ug+rwX storage bootstrap/cache
 
-# Ajustar permisos de almacenamiento y cache para Nginx
-RUN chown -R www-data:www-data /var/www \
-    && chmod -R 755 /var/www
-
-# Exponer puerto PHP-FPM
 EXPOSE 9000
 
-# Comando por defecto
 CMD ["php-fpm"]

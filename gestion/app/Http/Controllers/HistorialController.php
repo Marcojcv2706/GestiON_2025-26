@@ -27,11 +27,9 @@ class HistorialController extends Controller
         ]);
 
         if (!$isAdmin) {
-            if ($usuario->can('gestionar-actividades')) {
-                $query->where(function ($q) use ($usuario) {
-                    $q->where('solicitante_id', $usuario->id)
-                        ->orWhere('responsable_id', $usuario->id);
-                });
+            if ($usuario->can('es-profesor')) {
+                $query->where('responsable_id', $usuario->id)
+                    ->where('evento_nombre', 'like', 'Solicitud de implementos #%');
             } else {
                 $query->where('solicitante_id', $usuario->id);
             }

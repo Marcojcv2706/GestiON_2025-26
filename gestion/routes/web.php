@@ -11,6 +11,7 @@ use App\Http\Controllers\SubEspacioController;
 use App\Http\Controllers\EventoController;
 use App\Http\Controllers\SolicitudEventoController;
 use App\Http\Controllers\SolicitudRecursoController;
+use App\Http\Controllers\SolicitudController;
 use App\Http\Controllers\ProfileController;
 
 Route::get('/', function () {
@@ -31,7 +32,7 @@ Route::middleware(['auth'])->group(function () {
         abort(403, 'Los eventos deben crearse mediante una solicitud y aprobación administrativa.');
     })->name('eventos.store');
 
-    Route::get('/solicitudes', [SolicitudEventoController::class, 'index'])->name('solicitudes.index');
+    Route::get('/solicitudes', [SolicitudController::class, 'index'])->name('solicitudes.index');
     Route::get('/solicitudes/crear', [SolicitudEventoController::class, 'create'])
         ->middleware('can:es-profesor')
         ->name('solicitudes.create');
@@ -39,16 +40,6 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('can:es-profesor')
         ->name('solicitudes.store');
     Route::get('/solicitudes/{solicitud}', [SolicitudEventoController::class, 'show'])->name('solicitudes.show');
-    Route::get('/solicitudes/{solicitud}/editar', [SolicitudEventoController::class, 'edit'])
-        ->middleware('can:es-profesor')
-        ->name('solicitudes.edit');
-    Route::put('/solicitudes/{solicitud}', [SolicitudEventoController::class, 'update'])
-        ->middleware('can:es-profesor')
-        ->name('solicitudes.update');
-    Route::post('/solicitudes/{solicitud}/reenviar', [SolicitudEventoController::class, 'reenviar'])
-        ->middleware('can:es-profesor')
-        ->name('solicitudes.reenviar');
-
     Route::get('/solicitudes-implementos', [SolicitudRecursoController::class, 'index'])
         ->name('solicitudes-recursos.index');
     Route::middleware('can:es-usuario')->group(function () {
@@ -57,12 +48,17 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/solicitudes-implementos', [SolicitudRecursoController::class, 'store'])
             ->name('solicitudes-recursos.store');
     });
+    Route::get('/solicitudes-implementos/{solicitud}', [SolicitudRecursoController::class, 'show'])
+        ->name('solicitudes-recursos.show');
 
-    Route::middleware(['can:es-admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::middleware(['can:gestionar-solicitudes-recursos'])->prefix('admin')->name('admin.')->group(function () {
         Route::post('/solicitudes-implementos/{solicitud}/aprobar', [SolicitudRecursoController::class, 'aprobar'])
             ->name('solicitudes-recursos.aprobar');
         Route::post('/solicitudes-implementos/{solicitud}/rechazar', [SolicitudRecursoController::class, 'rechazar'])
             ->name('solicitudes-recursos.rechazar');
+    });
+
+    Route::middleware(['can:es-admin'])->prefix('admin')->name('admin.')->group(function () {
         Route::post('/solicitudes-implementos/{solicitud}/devolver', [SolicitudRecursoController::class, 'devolver'])
             ->name('solicitudes-recursos.devolver');
 
@@ -70,8 +66,6 @@ Route::middleware(['auth'])->group(function () {
             ->name('solicitudes.aprobar');
         Route::post('/solicitudes/{solicitud}/rechazar', [SolicitudEventoController::class, 'rechazar'])
             ->name('solicitudes.rechazar');
-        Route::post('/solicitudes/{solicitud}/solicitar-modificacion', [SolicitudEventoController::class, 'solicitarModificacion'])
-            ->name('solicitudes.solicitar-modificacion');
         Route::put('/solicitudes/{solicitud}/modificar', [SolicitudEventoController::class, 'modificarComoAdmin'])
             ->name('solicitudes.modificar');
 

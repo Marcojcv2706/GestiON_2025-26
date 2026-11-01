@@ -4984,6 +4984,93 @@ body.app-shell {
     line-height: 1.45;
 }
 
+.request-filters {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 14px;
+    margin-bottom: 24px;
+    padding: 18px;
+    border: 1px solid var(--gestion-line);
+    border-radius: 12px;
+    background: var(--gestion-wash);
+}
+
+.request-filters .form-label {
+    margin-bottom: 6px;
+    color: var(--gestion-ink);
+    font-size: .84rem;
+    font-weight: 650;
+}
+
+.request-filter-actions,
+.unified-request-meta {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.request-filter-actions {
+    flex-wrap: wrap;
+}
+
+.request-type-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 3px 8px;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    font-size: .64rem;
+    font-weight: 750;
+    letter-spacing: .08em;
+}
+
+.request-type-evento {
+    color: var(--gestion-gold);
+}
+
+.request-type-implemento {
+    color: #8fd7b0;
+}
+
+.unified-request-row .activity-main h2 {
+    margin: 7px 0 4px;
+    color: var(--gestion-ink);
+    font-size: 1.12rem;
+    font-weight: 650;
+}
+
+.unified-request-row .activity-main p {
+    margin: 5px 0;
+}
+
+.unified-request-resources {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    margin: 8px 0;
+    padding-left: 18px;
+    font-size: .85rem;
+}
+
+.unified-request-created {
+    display: inline-block;
+    margin-top: 5px;
+    color: var(--gestion-muted);
+    font-size: .74rem;
+}
+
+@media (max-width: 720px) {
+    .request-filters {
+        grid-template-columns: 1fr;
+    }
+
+    .request-filter-actions {
+        align-items: stretch;
+    }
+}
+
 @media (max-width: 540px) {
     .guest-shell-page {
         justify-content: flex-start;

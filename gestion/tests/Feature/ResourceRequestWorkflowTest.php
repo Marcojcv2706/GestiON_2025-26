@@ -81,6 +81,31 @@ test('resource requests require a valid date, reason, and at least one positive 
         ->and($this->resource->fresh()->cantidad_disponible)->toBe(5);
 });
 
+test('blank resource quantities are treated as not requested', function () {
+    $otherResource = Recurso::create([
+        'name' => 'Balón',
+        'tipo' => 'Deportivos',
+        'cantidad_total' => 4,
+        'cantidad_disponible' => 4,
+    ]);
+
+    $this->actingAs($this->student)
+        ->post(route('solicitudes-recursos.store'), [
+            ...$this->payload,
+            'recursos' => [
+                $this->resource->id => 3,
+                $otherResource->id => '',
+            ],
+        ])
+        ->assertRedirect(route('solicitudes-recursos.index'))
+        ->assertSessionHas('success');
+
+    $request = SolicitudRecurso::with('recursos')->firstOrFail();
+    expect($request->recursos)->toHaveCount(1)
+        ->and($request->recursos->first()->id)->toBe($this->resource->id)
+        ->and($request->recursos->first()->pivot->cantidad)->toBe(3);
+});
+
 test('approval rechecks stock and rejection records a reason without changing inventory', function () {
     $this->actingAs($this->student)
         ->post(route('solicitudes-recursos.store'), $this->payload)
@@ -103,15 +128,15 @@ test('approval rechecks stock and rejection records a reason without changing in
         ->and($this->resource->fresh()->cantidad_disponible)->toBe(2);
 });
 
-test('only students can request resources and only administrators can review them', function () {
+test('only students can request resources while teachers and administrators can review them', function () {
     $this->actingAs($this->teacher)
         ->get(route('solicitudes-recursos.create'))
         ->assertForbidden();
     $this->post(route('solicitudes-recursos.store'), $this->payload)
         ->assertForbidden();
-    $this->get(route('solicitudes-recursos.index'))->assertForbidden();
+    $this->get(route('solicitudes.index'))->assertOk();
 
     $this->actingAs($this->admin)
         ->get(route('solicitudes-recursos.index'))
-        ->assertOk();
+        ->assertRedirect(route('solicitudes.index', ['tipo' => 'implementos']));
 });

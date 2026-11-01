@@ -37,6 +37,25 @@ test('un usuario autenticado puede ver el dashboard', function () {
         ->assertOk();
 });
 
+test('cada rol ve su acción de inicio y no aparece el enlace Mi cuenta', function () {
+    $roleActions = [
+        'Administrador' => 'Agregar evento',
+        'Profesor' => 'Solicitar un evento',
+        'Usuario' => 'Solicitar implementos',
+    ];
+
+    foreach ($roleActions as $roleName => $action) {
+        $role = Rol::firstOrCreate(['name' => $roleName]);
+        $user = User::factory()->create(['role_id' => $role->id]);
+
+        $this->actingAs($user)
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertSee($action)
+            ->assertDontSee('Mi cuenta');
+    }
+});
+
 test('un usuario autenticado puede ver la lista de sus eventos', function () {
     $user = User::factory()->create();
 

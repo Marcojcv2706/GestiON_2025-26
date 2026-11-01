@@ -27,6 +27,7 @@
 
 <fieldset class="form-section-block">
     <legend>Fecha y horario</legend>
+    <p class="form-section-help">La duración inicial será de una hora. Puedes ajustar la hora de finalización.</p>
     <div class="row g-3">
         <div class="col-md-6">
             <label for="start_time" class="form-label">Inicio <span>*</span></label>
