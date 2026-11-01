@@ -12,9 +12,7 @@
                 <p>Existencias y disponibilidad del inventario.</p>
             </div>
             <div class="inventory-header-actions">
-                <a href="{{ route('admin.recursos.importar') }}" class="action-link action-link-secondary">
-                    <i class="fa-solid fa-file-import" aria-hidden="true"></i> Importar Excel
-                </a>
+                
                 <a href="{{ route('admin.recursos.create') }}" class="action-link action-link-primary">
                     <i class="fa-solid fa-plus" aria-hidden="true"></i> Agregar implemento
                 </a>

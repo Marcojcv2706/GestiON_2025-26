@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const syncSubspaces = (clearInvalid = false) => {
             const spaceId = spaceSelect.value;
             const availableOptions = options.filter((option) => option.dataset.spaceId === spaceId);
+            subspacePicker.classList.add('is-changing');
             options.forEach((option) => {
                 const matches = option.dataset.spaceId === spaceId;
                 option.hidden = !matches;
@@ -23,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             placeholder.hidden = Boolean(spaceId);
             notApplicable.hidden = !spaceId || availableOptions.length > 0;
+            window.setTimeout(() => subspacePicker.classList.remove('is-changing'), 160);
         };
 
         subspacePicker.closest('form')?.addEventListener('submit', (event) => {
